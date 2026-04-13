@@ -1,0 +1,152 @@
+{
+  "strict": true,
+
+  "nodes": {
+    "Actor": [
+      {
+        "labels": ["Actor"],
+        "optional_labels": [],
+        "open_labels": false,
+
+        "mandatory_properties": {
+          "name": { "type": "string" }
+        },
+
+        "optional_properties": {
+          "age": { "type": "integer" }
+        },
+
+        "open_properties": true
+      }
+    ],
+
+    "Director": [
+      {
+        "labels": ["Director"],
+        "optional_labels": [],
+        "open_labels": false,
+
+        "mandatory_properties": {
+          "name": { "type": "string" }
+        },
+
+        "optional_properties": {
+          "experience": { "type": "integer" }
+        },
+
+        "open_properties": false
+      }
+    ],
+
+    "Producer": [
+      {
+        "labels": ["Producer"],
+        "optional_labels": [],
+        "open_labels": true,
+
+        "mandatory_properties": {
+          "name": { "type": "string" }
+        },
+
+        "optional_properties": {},
+
+        "open_properties": false
+      }
+    ],
+
+    "Writer": [
+      {
+        "labels": ["Writer"],
+        "optional_labels": [],
+        "open_labels": true,
+
+        "mandatory_properties": {
+          "name": { "type": "string" }
+        },
+
+        "optional_properties": {
+          "genre": { "type": "string" }
+        },
+
+        "open_properties": true
+      }
+    ],
+
+    "Reviewer": [
+      {
+        "labels": ["Reviewer"],
+        "optional_labels": [],
+        "open_labels": false,
+
+        "mandatory_properties": {
+          "name": { "type": "string" }
+        },
+
+        "optional_properties": {
+          "rating": { "type": "integer" }
+        },
+
+        "open_properties": true
+      }
+    ],
+
+    "Film": [
+      {
+        "labels": ["Film"],
+        "optional_labels": [],
+        "open_labels": false,
+
+        "mandatory_properties": {
+          "title": { "type": "string" }
+        },
+
+        "optional_properties": {
+          "released": { "type": "integer" },
+          "budget": { "type": "integer" }
+        },
+
+        "open_properties": false
+      }
+    ]
+  },
+
+  "edges": {
+    "PERFORMED_IN": {
+      "from": ["Actor"],
+      "to": ["Film"],
+      "open_properties": true,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "CREATED": {
+      "from": ["Director"],
+      "to": ["Film"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "role": { "type": "string" }
+      },
+      "optional_properties": {}
+    },
+
+    "WORKED_ON": {
+      "from": ["Producer", "Writer"],
+      "to": ["Film"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "role": { "type": "string" }
+      },
+      "optional_properties": {
+        "year": { "type": "integer" }
+      }
+    },
+
+    "FOLLOWS": {
+      "from": ["Actor", "Director", "Producer", "Writer", "Reviewer"],
+      "to": ["Actor", "Director", "Producer", "Writer", "Reviewer"],
+      "open_properties": true,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    }
+  }
+}

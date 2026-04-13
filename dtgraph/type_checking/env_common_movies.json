@@ -1,0 +1,10 @@
+{
+  "source": {
+    "title": "string"
+  },
+  "target": {
+    "name": "string",
+    "CommonMovies": "bag[string]"
+  },
+  "functions": {}
+}

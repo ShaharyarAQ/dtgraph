@@ -1,0 +1,45 @@
+{
+  "strict": true,
+
+  "nodes": {
+    "Actor": [
+      {
+        "labels": ["Actor"],
+        "optional_labels": [],
+        "open_labels": false,
+
+        "mandatory_properties": {
+          "name": { "type": "string" }
+        },
+
+        "optional_properties": {},
+        "open_properties": true
+      }
+    ],
+
+    "Movie": [
+      {
+        "labels": ["Movie"],
+        "optional_labels": [],
+        "open_labels": false,
+
+        "mandatory_properties": {
+          "title": { "type": "string" }
+        },
+
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ]
+  },
+
+  "edges": {
+    "ACTED_IN": {
+      "from": ["Actor"],
+      "to": ["Movie"],
+      "mandatory_properties": {},
+      "optional_properties": {},
+      "open_properties": false
+    }
+  }
+}

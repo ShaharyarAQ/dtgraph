@@ -15,11 +15,19 @@ attribute = Word(alphas, alphanums+"_")
 accesskey = Combine(freevar + Literal('.') + attribute)
 label = Word(alphas.upper(), alphanums+"_")
 
-IDElement = (constant | accesskey | freevar | label)
+# IDElement = (constant | accesskey | freevar | label)
+
+SkolemRef = Group(LPAR + freevar + RPAR)
+IDElement = (constant | accesskey | SkolemRef | freevar | label)
+
 # As list of constant or accesskey expressions:
 #ConstExpression = DelimitedList(accesskey | constant, delim="+")
 # Or, flatened ConstExpression:
-ConstExpression = Combine((accesskey | constant) + ZeroOrMore("+" + (accesskey | constant)), adjacent=False, joinString=" ")
+# ConstExpression = Combine((accesskey | constant) + ZeroOrMore("+" + (accesskey | constant)), adjacent=False, joinString=" ")
+
+### Accpeting more types of properties in RHS
+ConstExpression = Combine(SkipTo(Regex(r",|\}"), include=False))
+
 PropertyElement = Group(attribute('key') + EQUAL + ConstExpression('value'))
 
 IDTuple = LPAR + Optional(DelimitedList(IDElement, allow_trailing_delim=True), default=[])('ids') + RPAR
@@ -33,7 +41,14 @@ LeftEdgeConstructor = Group(NodeConstructor)('tgt') + Suppress('<-[') + Group(Co
 EdgeConstructor = RightEdgeConstructor | LeftEdgeConstructor
 
 Constructor = EdgeConstructor | NodeConstructor
-RightHandSide = DelimitedList(Group(Constructor), allow_trailing_delim=True)('constructors')
+# RightHandSide = DelimitedList(Group(Constructor), allow_trailing_delim=True)('constructors')
+
+#### Extension ####
+statement_delimiter = Suppress(",") | Suppress(";")
+
+RightHandSide = DelimitedList(Group(Constructor),delim=statement_delimiter,allow_trailing_delim=True)('constructors')
+
+##################
 
 middle_delimiter = Keyword('=>') | CaselessKeyword('GENERATE')
 RuleParser = SkipTo(middle_delimiter)('lhs') + middle_delimiter + RightHandSide

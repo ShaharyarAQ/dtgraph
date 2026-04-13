@@ -1,8 +1,17 @@
 from dtgraph.exceptions import CompileError
 
 class Compiler:
-    def __init__(self, database, with_diagnose = True, explain = False, profile = False):
+    # def __init__(self, database, with_diagnose = True, explain = False, profile = False):
+    #     self._database = database
+    #     self._with_diagnose = with_diagnose
+    #     self._explain = explain
+    #     self._profile = profile
+
+
+    def __init__(self, database, env=None, type_strict=False, with_diagnose=True, explain=False, profile=False):
         self._database = database
+        self._env = env
+        self._type_strict = type_strict
         self._with_diagnose = with_diagnose
         self._explain = explain
         self._profile = profile
@@ -61,9 +70,18 @@ class Compiler:
         if labels is None or len(labels) != 1:
             raise CompileError("Relationships should be of only one type in openCypher.")
         script += f'MERGE ({src_alias})-[{alias}:{labels[0]} {{\n    ' 
+        # idsE = [labels[0]]
+        # idsE.extend(ids)
+        # idsE.extend([src_alias, tgt_alias])
+
         idsE = [labels[0]]
-        idsE.extend(ids)
-        idsE.extend([src_alias, tgt_alias])
+
+        if ids:
+            idsE.extend(ids)
+        else:
+            # fallback to structural identity
+            idsE.extend([src_alias, tgt_alias])
+
         script += self._process_ids(idsE)
         script += f' \n}}]->({tgt_alias})\n'
         script += self._process_properties(alias, labels, properties, setLabels=False)
@@ -103,11 +121,22 @@ class Compiler:
         script += f'{ """ + "," + """.join(map(self._wrap_id, ids)) } + ")"'
         return script
 
-    def _wrap_id(self, id: str) -> str:
-        # id[0].islower() rules out both Labels and "constants"; the last check rules out access.keys
+    # def _wrap_id(self, id: str) -> str:
+    #     # id[0].islower() rules out both Labels and "constants"; the last check rules out access.keys
+    #     if id[0].islower() and '.' not in id:
+    #         return ("element" if self._database == "neo4j" else "") + "ID(" + id + ")"
+    #     # labels should get enclosed into quotes; we add leading and trailing colons for labels
+    #     elif id[0].isupper():
+    #         return '":' + id + ':"'
+    #     else:
+    #         return id
+
+    def _wrap_id(self, id) -> str:
+        if isinstance(id, list):
+            ref = id[0]
+            return ref + "._id"
         if id[0].islower() and '.' not in id:
             return ("element" if self._database == "neo4j" else "") + "ID(" + id + ")"
-        # labels should get enclosed into quotes; we add leading and trailing colons for labels
         elif id[0].isupper():
             return '":' + id + ':"'
         else:
@@ -155,12 +184,96 @@ class Compiler:
             alias + "." + p['key'] + ' = "Conflict Detected!"' 
         )
 
+    # def _conflict_detection(self, alias: str, p: dict[str, str]) -> str:
+    #     return (
+    #         alias + "." + p['key'] + " = \n        CASE\n            WHEN " 
+    #         + alias + "." + p['key'] + " <> " + p['value'] 
+    #         + ' THEN\n                "Conflict Detected!"\n            ELSE\n                ' 
+    #         + p["value"] + "\n        END"
+    #     )
+
+    def _parse_type(self, type_str: str):
+
+        if isinstance(type_str, list):
+            # assume union of scalar types
+            return "scalar", type_str
+    
+        if not type_str:
+            return "scalar", None
+
+        if type_str.startswith("bag["):
+            return "bag", type_str[4:-1]
+
+        if type_str.startswith("set["):
+            return "set", type_str[4:-1]
+
+        return "scalar", type_str
+
     def _conflict_detection(self, alias: str, p: dict[str, str]) -> str:
+
+        value = p["value"].strip()
+        key = p["key"]
+
+        # Default DTGraph behavior
+        if not self._type_strict or not self._env:
+            return (
+                alias + "." + key + " = \n        CASE\n            WHEN "
+                + alias + "." + key + " <> " + value
+                + ' THEN\n                "Conflict Detected!"\n            ELSE\n                '
+                + value + "\n        END"
+            )
+
+        # Type strict mode
+        type_str = self._env.target.get(key)
+
+        from dtgraph.exceptions import CompileError
+
+        # Checking if property exists
+        if not type_str:
+            raise CompileError(f"Unknown target property '{key}' in strict mode")
+
+        kind, inner = self._parse_type(type_str)
+
+        # Collection types (bag/set)
+        if kind in ["bag", "set"]:
+
+            # Must be a list
+            if not (value.startswith("[") and value.endswith("]")):
+                raise CompileError(
+                    f"Property '{key}' expects a collection ({kind}[{inner}]) but got scalar value '{value}'"
+                )
+
+            # NULL-safe transformation
+            inner_expr = value[1:-1].strip()
+            safe_value = (
+                "CASE WHEN " + inner_expr + " IS NULL THEN [] ELSE [" + inner_expr + "] END"
+            )
+
+            # BAG → append (allow duplicates)
+            if kind == "bag":
+                return (
+                    alias + "." + key + " = \n        CASE\n"
+                    "            WHEN " + alias + "." + key + " IS NULL THEN " + safe_value + "\n"
+                    "            ELSE " + alias + "." + key + " + " + safe_value + "\n"
+                    "        END"
+                )
+
+            # SET → append + deduplicate
+            if kind == "set":
+                return (
+                    alias + "." + key + " = \n        CASE\n"
+                    "            WHEN " + alias + "." + key + " IS NULL THEN " + safe_value + "\n"
+                    "            ELSE REDUCE(acc = " + alias + "." + key + ", x IN " + safe_value + " |\n"
+                    "                CASE WHEN x IN acc THEN acc ELSE acc + x END)\n"
+                    "        END"
+                )
+
+        # SCALAR → always conflict (NO merge)
         return (
-            alias + "." + p['key'] + " = \n        CASE\n            WHEN " 
-            + alias + "." + p['key'] + " <> " + p['value'] 
-            + ' THEN\n                "Conflict Detected!"\n            ELSE\n                ' 
-            + p["value"] + "\n        END"
+            alias + "." + key + " = \n        CASE\n            WHEN "
+            + alias + "." + key + " <> " + value
+            + ' THEN\n                "Conflict Detected!"\n            ELSE\n                '
+            + value + "\n        END"
         )
 
 if __name__ == "__main__":
