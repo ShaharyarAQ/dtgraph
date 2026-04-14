@@ -109,6 +109,11 @@ class SemanticAnalyzer:
                             f"Invalid operation: {l} {node.operator} {r}"
                             )
 
+            if not result:
+                raise Exception(
+                    f"Could not infer type for operation: {left_types} {node.operator} {right_types}"
+                )
+
             return list(set(result))
         
         if isinstance(node, BooleanLiteral):
@@ -120,6 +125,9 @@ class SemanticAnalyzer:
 
             if node.operator == "-" and "integer" in operand:
                 return ["integer"]
+
+            if node.operator == "NOT" and "boolean" in operand:
+                return ["boolean"]
 
             raise Exception(f"Invalid unary operation: {node.operator} {operand}")
         
@@ -133,13 +141,15 @@ class SemanticAnalyzer:
 
                     if l == r:
 
-                        if l == "integer":
-                            return ["boolean"]
-
                         if node.operator in ["==", "!="]:
                             return ["boolean"]
 
-            raise Exception(f"Invalid comparison: cannot apply '{node.operator}' to {left} and {right}")
+                        if l == "integer" and node.operator in [">", "<", ">=", "<="]:
+                            return ["boolean"]
+
+            raise Exception(
+                f"Invalid comparison: cannot apply '{node.operator}' to {left} and {right}"
+            )
         
         if isinstance(node, LogicalExpression):
 

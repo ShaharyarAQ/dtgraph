@@ -6,7 +6,10 @@ grammar = r"""
 ?or_expr: or_expr "OR" and_expr   -> or_op
         | and_expr
 
-?and_expr: and_expr "AND" comp_expr -> and_op
+?and_expr: and_expr "AND" not_expr -> and_op
+         | not_expr
+
+?not_expr: "NOT" not_expr         -> not_op
          | comp_expr
 
 ?comp_expr: arith_expr (COMP_OP arith_expr)? -> compare
@@ -115,3 +118,6 @@ class ASTTransformer(Transformer):
 
     def or_op(self, items):
         return LogicalExpression(items[0], "OR", items[1])
+    
+    def not_op(self, items):
+        return UnaryExpression("NOT", items[0])
