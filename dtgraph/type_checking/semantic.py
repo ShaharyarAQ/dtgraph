@@ -26,6 +26,9 @@ class SemanticAnalyzer:
 
                 prop["ast"] = ast
 
+                ## Translate to cypher
+                prop["value"] = to_cypher(ast)
+
                 print("AST:")
                 print_ast(ast)
 
@@ -202,6 +205,57 @@ def legacy_parse_expression(expr: str):
 def split_args(args_str):
     # simple version (can improve later)
     return [a.strip() for a in args_str.split(",") if a.strip()]
+
+
+def to_cypher(node):
+
+    if isinstance(node, Literal):
+        if node.type == "string":
+            return f'"{node.value}"'
+        return str(node.value)
+
+    if isinstance(node, PropertyAccess):
+        return f"{node.var}.{node.prop}"
+
+    if isinstance(node, FunctionCall):
+        args = ", ".join([to_cypher(arg) for arg in node.args])
+        return f"{node.name}({args})"
+
+    if isinstance(node, BinaryExpression):
+        left = to_cypher(node.left)
+        right = to_cypher(node.right)
+        return f"({left} {node.operator} {right})"
+
+    if isinstance(node, UnaryExpression):
+        operand = to_cypher(node.operand)
+
+        if node.operator == "-":
+            return f"(-{operand})"
+
+        if node.operator == "NOT":
+            return f"(NOT ({operand}))"
+
+    if isinstance(node, ComparisonExpression):
+        left = to_cypher(node.left)
+        right = to_cypher(node.right)
+
+        operator_map = {
+            "==": "=",
+            "!=": "<>"
+        }
+
+        operator = operator_map.get(node.operator, node.operator)
+        return f"({left} {operator} {right})"
+
+    if isinstance(node, LogicalExpression):
+        left = to_cypher(node.left)
+        right = to_cypher(node.right)
+        return f"({left} {node.operator} {right})"
+
+    if isinstance(node, BooleanLiteral):
+        return "true" if node.value else "false"
+
+    raise Exception(f"Unknown node type: {type(node)}")
 
 
 def print_ast(node, level=0):
