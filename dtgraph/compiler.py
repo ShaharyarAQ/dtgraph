@@ -132,6 +132,13 @@ class Compiler:
     #         return id
 
     def _wrap_id(self, id) -> str:
+
+        if id == "_":
+            if self._database == "neo4j":
+                return "randomUUID()"
+            else:
+                return "uuid()"
+        
         if isinstance(id, list):
             ref = id[0]
             return ref + "._id"

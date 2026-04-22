@@ -32,8 +32,11 @@ grammar = r"""
      | "false"         -> false
      | NAME "." NAME    -> property
      | NAME "(" args ")" -> function
+     | "[" list_items? "]"   -> list_expr
 
 ?args: expr ("," expr)*
+
+list_items: expr ("," expr)*
 
 COMP_OP: ">" | "<" | ">=" | "<=" | "==" | "!="
 
@@ -54,7 +57,8 @@ from .ast_nodes import (
     UnaryExpression,
     ComparisonExpression,
     LogicalExpression,
-    BooleanLiteral
+    BooleanLiteral,
+    ListExpression
 )
 
 parser = Lark(grammar, parser="lalr")
@@ -121,3 +125,14 @@ class ASTTransformer(Transformer):
     
     def not_op(self, items):
         return UnaryExpression("NOT", items[0])
+    
+    def list_expr(self, items):
+        if not items:
+            return ListExpression([])
+
+        list_node = items[0]
+
+        if isinstance(list_node, list):
+            return ListExpression(list_node)
+        
+        return ListExpression(list_node.children)

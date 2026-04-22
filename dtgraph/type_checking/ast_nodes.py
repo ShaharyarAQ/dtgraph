@@ -43,3 +43,7 @@ class BooleanLiteral(Node):
     def __init__(self, value):
         self.value = value
         self.type = "boolean"
+
+class ListExpression(Node):
+    def __init__(self, elements):
+        self.elements = elements

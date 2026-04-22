@@ -1,0 +1,40 @@
+{
+  "source": {
+    "name": "string",
+    "born": "integer",
+    "market_value_m": "integer",
+    "goals_career": "integer",
+
+    "nation": "string",
+    "club": "string",
+    "league": "string",
+
+    "founded": "integer"
+  },
+
+  "target": {
+    "name": "string",
+    "born": "integer",
+
+    "value_score": "integer",
+    "elite": "boolean",
+
+    "nation": "string",
+    "club": "string",
+    "league": "string",
+
+    "players": "bag[string]",
+    "clubs": "bag[string]",
+    "leagues": "bag[string]",
+    "nations": "bag[string]",
+    "trophies": "set[string]",
+
+    "since": "bag[integer]",
+
+    "movie": "string",
+    "movies": "bag[string]"
+  },
+
+  "functions": {
+  }
+}

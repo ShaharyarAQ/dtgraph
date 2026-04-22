@@ -1,7 +1,7 @@
 import re
 
 from .expression_parser import parser, ASTTransformer
-from .ast_nodes import BooleanLiteral, ComparisonExpression, Literal, LogicalExpression, PropertyAccess, FunctionCall, BinaryExpression, UnaryExpression
+from .ast_nodes import BooleanLiteral, ComparisonExpression, ListExpression, Literal, LogicalExpression, PropertyAccess, FunctionCall, BinaryExpression, UnaryExpression
 
 
 class SemanticAnalyzer:
@@ -13,43 +13,55 @@ class SemanticAnalyzer:
 
         for c in rule_dict.get("constructors", []):
 
-            labels = c.get("labels")
-            if not labels:
+            if "labels" in c:
+                objs = [c]
+
+            elif "edge" in c:
+                objs = [c["edge"]]
+
+            else:
                 continue
 
-            for prop in c.get("properties", []):
-                key = prop["key"]
-                raw_value = prop["value"].strip()
+            for obj in objs:
+                labels = obj.get("labels")
+                if not labels:
+                    continue
 
-                # Build AST
-                ast = parse_expression(raw_value)
+                for prop in obj.get("properties", []):
+                    key = prop["key"]
+                    raw_value = prop["value"].strip()
 
-                prop["ast"] = ast
+                    # Build AST
+                    ast = parse_expression(raw_value)
 
-                ## Translate to cypher
-                prop["value"] = to_cypher(ast)
+                    prop["ast"] = ast
 
-                print("AST:")
-                print_ast(ast)
+                    ## Translate to cypher
+                    prop["value"] = to_cypher(ast)
 
-                # Type check
-                if key not in self.env.target:
-                    raise Exception(f"Unknown target property: {key}")
+                    print("prop-value", prop["value"])
 
-                expected = self.env.target[key]
-                actual = self.infer_type(ast)
+                    print("AST:")
+                    print_ast(ast)
 
-                expected_types = expected if isinstance(expected, list) else [expected]
+                    # Type check
+                    if key not in self.env.target:
+                        raise Exception(f"Unknown target property: {key}")
 
-                def format_types(types):
-                    if len(types) == 1:
-                        return types[0]
-                    return " or ".join(types)
+                    expected = self.env.target[key]
+                    actual = self.infer_type(ast)
 
-                if not any(t in expected_types for t in actual):
-                    raise Exception(
-                        f"Type mismatch for '{key}': expected {format_types(expected_types)}, got {format_types(actual)}"
-                    )
+                    expected_types = expected if isinstance(expected, list) else [expected]
+
+                    def format_types(types):
+                        if len(types) == 1:
+                            return types[0]
+                        return " or ".join(types)
+
+                    if not any(t in expected_types for t in actual):
+                        raise Exception(
+                            f"Type mismatch for '{key}': expected {format_types(expected_types)}, got {format_types(actual)}"
+                        )
 
     # Type inference
     def infer_type(self, node):
@@ -163,6 +175,24 @@ class SemanticAnalyzer:
                 return ["boolean"]
 
             raise Exception(f"Logical operations require boolean operands, got {left} and {right}")
+        
+        if isinstance(node, ListExpression):
+
+            if not node.elements:
+                return ["list"]
+
+            element_types = []
+            for el in node.elements:
+                element_types.extend(self.infer_type(el))
+
+            element_types = list(set(element_types))
+
+            result = []
+            for t in element_types:
+                result.append(f"set[{t}]")
+                result.append(f"bag[{t}]")
+
+            return result
 
         raise Exception("Unknown AST node")
 
@@ -173,6 +203,7 @@ def parse_expression(expr: str):
         tree = parser.parse(expr)
         return ASTTransformer().transform(tree)
     except Exception:
+        print("In exception")
         return legacy_parse_expression(expr)
 
 def legacy_parse_expression(expr: str):
@@ -254,6 +285,10 @@ def to_cypher(node):
 
     if isinstance(node, BooleanLiteral):
         return "true" if node.value else "false"
+    
+    if isinstance(node, ListExpression):
+        elements = ", ".join([to_cypher(e) for e in node.elements])
+        return f"[{elements}]"
 
     raise Exception(f"Unknown node type: {type(node)}")
 
@@ -300,6 +335,11 @@ def print_ast(node, level=0):
     elif isinstance(node, BooleanLiteral):
         print(f"{indent}{prefix}BooleanLiteral")
         print(f"{indent}    └── value: {node.value}")
+
+    elif isinstance(node, ListExpression):
+        print(f"{indent}{prefix}ListExpression")
+        for el in node.elements:
+            print_ast(el, level + 1)
 
     else:
         print(f"{indent}{prefix}UnknownNode")

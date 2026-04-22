@@ -10,7 +10,8 @@ COMMA, COLON, LPAR, RPAR, LBRACE, RBRACE, EQUAL = map(Suppress, ",:(){}=")
 
 #constant = Combine(Literal('"') + Word(alphanums) + Literal('"'))
 constant = QuotedString('"', unquoteResults=False)
-freevar = Word(alphas.lower(), alphanums+"_")
+# freevar = Word(alphas.lower(), alphanums+"_")
+freevar = Word(alphas.lower() + "_", alphanums + "_") ## Supporting _ as skolem
 attribute = Word(alphas, alphanums+"_")
 accesskey = Combine(freevar + Literal('.') + attribute)
 label = Word(alphas.upper(), alphanums+"_")
