@@ -13,10 +13,10 @@ class TypeCheckingPipeline:
             if not hasattr(rule, "_dict") or rule._dict is None:
                 raise Exception("Invalid rule: missing parsed structure")
 
-            # print("\n--- Checking Rule ---")
+            print("\n--- Checking Rule ---")
             # print(rule)
-
+            print(rule._dict)
             self.analyzer.analyze(rule._dict)
 
-        # print("\n✔ All rules passed type checking\n")
+        print("\n All rules passed type checking\n")
         return rules

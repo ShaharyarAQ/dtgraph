@@ -1,0 +1,108 @@
+{
+  "strict": true,
+
+  "nodes": {
+
+    "T_country": [
+      {
+        "labels": ["T_country"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "ccode": { "type": "set[string]" },
+          "name": { "type": "string" },
+          "internal_id": { "type": "integer" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      },
+
+      {
+        "labels": ["T_country"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "name": { "type": "string" },
+          "valid": { "type": "string" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      },
+
+      {
+        "labels": ["T_country"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "ccode": { "type": "set[string]" },
+          "cname": { "type": "bag[string]" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+
+    ],
+
+    "T_director": [
+      {
+        "labels": ["T_director"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "name": { "type": "string" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "T_intermediary": [
+      {
+        "labels": ["T_intermediary"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {},
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "T_entity": [
+      {
+        "labels": ["T_entity"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {},
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ]
+  },
+
+  "edges": {
+
+    "LOCATED_IN": {
+      "from": ["T_director"],
+      "to": ["T_country"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "DIRECTOR_OF": {
+      "from": ["T_director"],
+      "to": ["T_entity"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "INTERVENED_IN": {
+      "from": ["T_director", "T_intermediary", "T_entity"],
+      "to": ["T_country"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    }
+  }
+}

@@ -25,14 +25,16 @@ grammar = r"""
 ?factor: "-" factor    -> neg
        | atom
        | "(" expr ")"
+dotted_name: NAME ("." NAME)*
 
-?atom: NUMBER           -> number
-     | STRING           -> string
-     | "true"          -> true
-     | "false"         -> false
-     | NAME "." NAME    -> property
-     | NAME "(" args ")" -> function
-     | "[" list_items? "]"   -> list_expr
+?atom: NUMBER      -> number
+     | STRING      -> string
+     | "true"
+     | "false"
+     | dotted_name "(" args ")" -> function
+     | NAME "." NAME            -> property
+     | NAME                     -> variable
+     | "[" list_items? "]"      -> list_expr
 
 ?args: expr ("," expr)*
 
@@ -58,7 +60,8 @@ from .ast_nodes import (
     ComparisonExpression,
     LogicalExpression,
     BooleanLiteral,
-    ListExpression
+    ListExpression,
+    Variable
 )
 
 parser = Lark(grammar, parser="lalr")
@@ -66,8 +69,16 @@ parser = Lark(grammar, parser="lalr")
 
 class ASTTransformer(Transformer):
 
+    # def number(self, items):
+    #     return Literal(str(items[0]), "integer")
+
     def number(self, items):
-        return Literal(str(items[0]), "integer")
+        value = str(items[0])
+
+        if "." in value:
+            return Literal(value, "float")
+        else:
+            return Literal(value, "integer")
 
     def string(self, items):
         return Literal(str(items[0])[1:-1], "string")
@@ -75,8 +86,11 @@ class ASTTransformer(Transformer):
     def property(self, items):
         return PropertyAccess(str(items[0]), str(items[1]))
 
+    def dotted_name(self, items):
+        return ".".join(str(i) for i in items)
+
     def function(self, items):
-        name = str(items[0])
+        name = items[0]   # already full string now
 
         if len(items) > 1:
             args = items[1]
@@ -136,3 +150,6 @@ class ASTTransformer(Transformer):
             return ListExpression(list_node)
         
         return ListExpression(list_node.children)
+    
+    def variable(self, items):
+        return Variable(str(items[0]))

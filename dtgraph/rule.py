@@ -199,28 +199,28 @@ class Rule(object):
             type_strict = getattr(self, "_type_strict", False)
 
             # Type checking (if enabled)
-            if env and type_strict:
-                if self._dict is None:
-                    raise Exception("Cannot type check rule without parsed structure")
+            # if env and type_strict:
+            #     if self._dict is None:
+            #         raise Exception("Cannot type check rule without parsed structure")
 
-                from type_checking.pipeline import TypeCheckingPipeline
-                from dtgraph.exceptions import CompileError
+            #     from type_checking.pipeline import TypeCheckingPipeline
+            #     from dtgraph.exceptions import CompileError
 
-                pipeline = TypeCheckingPipeline(env)
+            #     pipeline = TypeCheckingPipeline(env)
                 
 
-                try:
-                    pipeline.run([self])
-                except Exception as e:
-                    msg = str(e)
-                    lines = msg.split("\n")
-                    filtered = [line.strip(" -") for line in lines if line.strip().startswith("-")]
+            #     try:
+            #         pipeline.run([self])
+            #     except Exception as e:
+            #         msg = str(e)
+            #         lines = msg.split("\n")
+            #         filtered = [line.strip(" -") for line in lines if line.strip().startswith("-")]
 
-                    reason = filtered[0] if filtered else msg
+            #         reason = filtered[0] if filtered else msg
 
-                    raise CompileError(
-                        f"\nType checking failed for rule:\n{self}\n\nReason: {reason}"
-                    )
+            #         raise CompileError(
+            #             f"\nType checking failed for rule:\n{self}\n\nReason: {reason}"
+            #         )
 
 
             compiler = Compiler(

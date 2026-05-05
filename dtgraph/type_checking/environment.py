@@ -9,4 +9,5 @@ class Environment:
 
         self.source = data["source"]
         self.target = data["target"]
+        self.variables = data["variables"]
         self.functions = data["functions"]

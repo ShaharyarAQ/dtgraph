@@ -87,19 +87,41 @@ def _matches_node_shape(node, shape):
 
 
 # Edge matching
+# def match_edge_types(edge, schema):
+#     matched_types = []
+#     all_errors = {}
+
+#     for edge_type_name, edge_type in schema["edges"].items():
+#         ok, errors = _matches_edge_type(edge, edge_type_name, edge_type, schema)
+
+#         if ok:
+#             matched_types.append(edge_type_name)
+#         else:
+#             all_errors[edge_type_name] = errors
+
+#     return matched_types, all_errors
+
+
 def match_edge_types(edge, schema):
-    matched_types = []
-    all_errors = {}
+    edge_type_name = edge.type
+    edge_types = schema["edges"]
 
-    for edge_type_name, edge_type in schema["edges"].items():
-        ok, errors = _matches_edge_type(edge, edge_type_name, edge_type, schema)
+    # Case 1: Unknown edge type
+    if edge_type_name not in edge_types:
+        return [], {
+            edge_type_name: [f"Unknown edge type '{edge_type_name}'"]
+        }
 
-        if ok:
-            matched_types.append(edge_type_name)
-        else:
-            all_errors[edge_type_name] = errors
+    edge_type = edge_types[edge_type_name]
 
-    return matched_types, all_errors
+    ok, errors = _matches_edge_type(edge, edge_type_name, edge_type, schema)
+
+    if ok:
+        return [edge_type_name], {}
+
+    return [], {
+        edge_type_name: errors
+    }
 
 
 def _matches_edge_type(edge, edge_type_name, edge_type, schema):

@@ -1,0 +1,52 @@
+{
+  "source": {
+    "internal_id": "string",
+    "sourceID": "string",
+    "name": "string",
+    "country_codes": "bag[string]",
+    "countries": "bag[string]",
+    "countryname": "string",
+    "countrycode": "string",
+    "valid_until": "string"
+  },
+  "target": {
+    "ccode": "bag[string]",
+    "cname": "bag[string]",
+    "name": "string",
+    "valid": "string",
+    "internal_id": "integer"
+  },
+  "variables": {
+    "ccode": "bag[string]",
+    "cname": "bag[string]",
+    "name": "string",
+    "valid": "string",
+    "internal_id": "integer"
+  },
+  "functions": {
+    "head": {
+      "inputs": [
+        "bag[string]"
+      ],
+      "output": "string"
+    },
+    "toInteger": {
+      "inputs": [
+        "string"
+      ],
+      "output": "integer"
+    },
+    "upper": {
+      "inputs": [
+        "string"
+      ],
+      "output": "string"
+    },
+    "apoc.text.upperCamelCase": {
+      "inputs": [
+        "string"
+      ],
+      "output": "string"
+    }
+  }
+}

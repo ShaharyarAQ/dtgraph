@@ -1,7 +1,6 @@
 from pg_schema.matcher import match_node_types, match_edge_types
 
 
-
 def validate_node(node, schema):
     strict = schema.get("strict", True)
     node_types = schema["nodes"]
@@ -43,7 +42,6 @@ def validate_edge(edge, schema):
         if edge.type not in edge_types:
             raise ValueError(
                 f"Unknown edge type '{edge.type}' in strict mode. "
-                f"The relationship type '{edge.type}' is not defined in the provided schema."
             )
 
     # Matching check

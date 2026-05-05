@@ -233,6 +233,7 @@ class Compiler:
         # Type strict mode
         type_str = self._env.target.get(key)
 
+        import re
         from dtgraph.exceptions import CompileError
 
         # Checking if property exists
@@ -241,20 +242,54 @@ class Compiler:
 
         kind, inner = self._parse_type(type_str)
 
+
+        # Detect source type
+        source_type = None
+
+        # Property access
+        match = re.search(r"\b\w+\.(\w+)\b", value)
+        if match:
+            attr = match.group(1)
+            source_type = self._env.source.get(attr)
+
+        # Variable
+        elif value in getattr(self._env, "variables", {}):
+            source_type = self._env.variables[value]
+
+        # Detect literal list
+        value_stripped = value.strip()
+        is_list_literal = value_stripped.startswith("[") and value_stripped.endswith("]")
+
+        # Determine collection
+        is_collection = False
+
+        if source_type and source_type.startswith(("bag[", "set[")):
+            is_collection = True
+
+        if is_list_literal:
+            is_collection = True
+
         # Collection types (bag/set)
         if kind in ["bag", "set"]:
 
-            # Must be a list
-            if not (value.startswith("[") and value.endswith("]")):
+            if not is_collection:
                 raise CompileError(
-                    f"Property '{key}' expects a collection ({kind}[{inner}]) but got scalar value '{value}'"
+                    f"Property '{key}' expects a collection ({kind}[{inner}]) "
+                    f"but got scalar value '{value}'"
                 )
 
-            # NULL-safe transformation
-            inner_expr = value[1:-1].strip()
-            safe_value = (
-                "CASE WHEN " + inner_expr + " IS NULL THEN [] ELSE [" + inner_expr + "] END"
-            )
+            if is_list_literal:
+                inner_expr = value_stripped[1:-1].strip()
+            else:
+                inner_expr = value
+
+            # Avoid double wrapping
+            if source_type and source_type.startswith(("bag[", "set[")):
+                safe_value = inner_expr
+            else:
+                safe_value = (
+                    "CASE WHEN " + inner_expr + " IS NULL THEN [] ELSE [" + inner_expr + "] END"
+                )
 
             # BAG → append (allow duplicates)
             if kind == "bag":
@@ -274,6 +309,12 @@ class Compiler:
                     "                CASE WHEN x IN acc THEN acc ELSE acc + x END)\n"
                     "        END"
                 )
+            
+        # SCALAR
+        if source_type and source_type.startswith(("bag[", "set[")):
+            raise CompileError(
+                f"Property '{key}' expects scalar but got collection '{value}'"
+            )
 
         # SCALAR → always conflict (NO merge)
         return (

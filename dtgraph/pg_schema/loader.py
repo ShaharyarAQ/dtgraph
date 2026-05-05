@@ -3,14 +3,13 @@ import json
 class SchemaLoader:
     def __init__(self, path):
         self.path = path
-        self.schema = None
+        self.schema = self._load()
 
-    def load(self):
+    def _load(self):
         with open(self.path, "r") as f:
             raw_schema = json.load(f)
 
-        self.schema = self._normalize_schema(raw_schema)
-        return self.schema
+        return self._normalize_schema(raw_schema)
 
     def _normalize_schema(self, schema):
         return {
@@ -40,9 +39,7 @@ class SchemaLoader:
                         shape.get("optional_properties", {})
                     ),
 
-                    "open_properties": shape.get(
-                        "open_properties", False
-                    )
+                    "open_properties": shape.get("open_properties", False)
                 })
 
         return normalized
@@ -64,9 +61,7 @@ class SchemaLoader:
                     edge_def.get("optional_properties", {})
                 ),
 
-                "open_properties": edge_def.get(
-                    "open_properties", False
-                )
+                "open_properties": edge_def.get("open_properties", False)
             }
 
         return normalized
@@ -77,16 +72,19 @@ class SchemaLoader:
 
         for prop_name, prop_def in properties.items():
 
-            # case: "name": "string"
             if isinstance(prop_def, str):
-                normalized[prop_name] = {
-                    "type": prop_def
-                }
+                normalized[prop_name] = {"type": prop_def}
 
-            # case: { "type": "string" }
             elif isinstance(prop_def, dict):
-                normalized[prop_name] = {
-                    "type": prop_def.get("type")
-                }
+                normalized[prop_name] = {"type": prop_def.get("type")}
 
         return normalized
+
+    def __getitem__(self, key):
+        return self.schema[key]
+
+    def get(self, key, default=None):
+        return self.schema.get(key, default)
+
+    def __repr__(self):
+        return f"<SchemaLoader path={self.path}>"

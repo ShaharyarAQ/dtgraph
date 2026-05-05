@@ -47,3 +47,7 @@ class BooleanLiteral(Node):
 class ListExpression(Node):
     def __init__(self, elements):
         self.elements = elements
+
+class Variable(Node):
+    def __init__(self, name):
+        self.name = name

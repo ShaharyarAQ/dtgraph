@@ -1,7 +1,34 @@
 import re
 
 from .expression_parser import parser, ASTTransformer
-from .ast_nodes import BooleanLiteral, ComparisonExpression, ListExpression, Literal, LogicalExpression, PropertyAccess, FunctionCall, BinaryExpression, UnaryExpression
+from .ast_nodes import (
+    BooleanLiteral,
+    ComparisonExpression,
+    ListExpression,
+    Literal,
+    LogicalExpression,
+    PropertyAccess,
+    FunctionCall,
+    BinaryExpression,
+    UnaryExpression,
+    Variable,
+)
+
+
+def is_compatible(actual, expected):
+
+    # exact match
+    if actual == expected:
+        return True
+
+    # bag/set compatibility
+    if actual.startswith(("bag[", "set[")) and expected.startswith(("bag[", "set[")):
+        actual_inner = actual[actual.find("[") + 1 : -1]
+        expected_inner = expected[expected.find("[") + 1 : -1]
+
+        return actual_inner == expected_inner
+
+    return False
 
 
 class SemanticAnalyzer:
@@ -13,14 +40,13 @@ class SemanticAnalyzer:
 
         for c in rule_dict.get("constructors", []):
 
-            if "labels" in c:
-                objs = [c]
+            objs = []
 
-            elif "edge" in c:
-                objs = [c["edge"]]
+            if "edge" in c:
+                objs.extend([c["src"], c["edge"], c["tgt"]])
 
             else:
-                continue
+                objs.append(c)
 
             for obj in objs:
                 labels = obj.get("labels")
@@ -39,8 +65,6 @@ class SemanticAnalyzer:
                     ## Translate to cypher
                     prop["value"] = to_cypher(ast)
 
-                    print("prop-value", prop["value"])
-
                     print("AST:")
                     print_ast(ast)
 
@@ -51,14 +75,19 @@ class SemanticAnalyzer:
                     expected = self.env.target[key]
                     actual = self.infer_type(ast)
 
-                    expected_types = expected if isinstance(expected, list) else [expected]
+                    expected_types = (
+                        expected if isinstance(expected, list) else [expected]
+                    )
 
                     def format_types(types):
                         if len(types) == 1:
                             return types[0]
                         return " or ".join(types)
 
-                    if not any(t in expected_types for t in actual):
+                    # if not any(t in expected_types for t in actual):
+                    if not any(
+                        is_compatible(a, e) for a in actual for e in expected_types
+                    ):
                         raise Exception(
                             f"Type mismatch for '{key}': expected {format_types(expected_types)}, got {format_types(actual)}"
                         )
@@ -92,15 +121,27 @@ class SemanticAnalyzer:
 
                 expected_types = expected if isinstance(expected, list) else [expected]
 
-                if not any(t in expected_types for t in actual):
+                # if not any(t in expected_types for t in actual):
+                #     raise Exception(
+                #         f"Function '{node.name}' expected {expected_types}, got {actual}"
+                #     )
+
+                if not any(is_compatible(a, e) for a in actual for e in expected_types):
                     raise Exception(
                         f"Function '{node.name}' expected {expected_types}, got {actual}"
                     )
 
             out = func["output"]
             return out if isinstance(out, list) else [out]
-        
+
         #### New blocks for expressions
+
+        if isinstance(node, Variable):
+            if node.name not in self.env.variables:
+                raise Exception(f"Unknown variable: {node.name}")
+            t = self.env.variables[node.name]
+            return t if isinstance(t, list) else [t]
+
         if isinstance(node, BinaryExpression):
 
             left_types = self.infer_type(node.left)
@@ -111,17 +152,35 @@ class SemanticAnalyzer:
             for l in left_types:
                 for r in right_types:
 
+                    # if node.operator in ["+", "-", "*", "/"]:
+
+                    #     if l == "integer" and r == "integer":
+                    #         result.append("integer")
+
+                    #     elif node.operator == "+" and l == "string" and r == "string":
+                    #         result.append("string")
+
+                    #     else:
+                    #         raise Exception(
+                    #         f"Invalid operation: {l} {node.operator} {r}"
+                    #         )
+
                     if node.operator in ["+", "-", "*", "/"]:
 
-                        if l == "integer" and r == "integer":
-                            result.append("integer")
+                        # numeric operations
+                        if l in ["integer", "float"] and r in ["integer", "float"]:
+                            if l == "float" or r == "float":
+                                result.append("float")
+                            else:
+                                result.append("integer")
 
+                        # string concatenation
                         elif node.operator == "+" and l == "string" and r == "string":
                             result.append("string")
 
                         else:
                             raise Exception(
-                            f"Invalid operation: {l} {node.operator} {r}"
+                                f"Invalid operation: {l} {node.operator} {r}"
                             )
 
             if not result:
@@ -130,22 +189,36 @@ class SemanticAnalyzer:
                 )
 
             return list(set(result))
-        
+
         if isinstance(node, BooleanLiteral):
             return ["boolean"]
-        
+
+        # if isinstance(node, UnaryExpression):
+
+        #     operand = self.infer_type(node.operand)
+
+        #     if node.operator == "-" and "integer" in operand:
+        #         return ["integer"]
+
+        #     if node.operator == "NOT" and "boolean" in operand:
+        #         return ["boolean"]
+
+        #     raise Exception(f"Invalid unary operation: {node.operator} {operand}")
+
         if isinstance(node, UnaryExpression):
 
             operand = self.infer_type(node.operand)
 
-            if node.operator == "-" and "integer" in operand:
-                return ["integer"]
+            # Numeric negation
+            if node.operator == "-" and any(t in ["integer", "float"] for t in operand):
+                return operand
 
+            # Logical negation
             if node.operator == "NOT" and "boolean" in operand:
                 return ["boolean"]
 
             raise Exception(f"Invalid unary operation: {node.operator} {operand}")
-        
+
         if isinstance(node, ComparisonExpression):
 
             left = self.infer_type(node.left)
@@ -154,18 +227,25 @@ class SemanticAnalyzer:
             for l in left:
                 for r in right:
 
-                    if l == r:
+                    # if l == r:
+                    if l == r or (
+                        l in ["integer", "float"] and r in ["integer", "float"]
+                    ):
 
                         if node.operator in ["==", "!="]:
                             return ["boolean"]
 
-                        if l == "integer" and node.operator in [">", "<", ">=", "<="]:
-                            return ["boolean"]
+                        # if l == "integer" and node.operator in [">", "<", ">=", "<="]:
+                        #     return ["boolean"]
+
+                        if node.operator in [">", "<", ">=", "<="]:
+                            if l in ["integer", "float"] and r in ["integer", "float"]:
+                                return ["boolean"]
 
             raise Exception(
                 f"Invalid comparison: cannot apply '{node.operator}' to {left} and {right}"
             )
-        
+
         if isinstance(node, LogicalExpression):
 
             left = self.infer_type(node.left)
@@ -174,8 +254,10 @@ class SemanticAnalyzer:
             if all(t == "boolean" for t in left) and all(t == "boolean" for t in right):
                 return ["boolean"]
 
-            raise Exception(f"Logical operations require boolean operands, got {left} and {right}")
-        
+            raise Exception(
+                f"Logical operations require boolean operands, got {left} and {right}"
+            )
+
         if isinstance(node, ListExpression):
 
             if not node.elements:
@@ -196,6 +278,7 @@ class SemanticAnalyzer:
 
         raise Exception("Unknown AST node")
 
+
 def parse_expression(expr: str):
     expr = expr.strip()
 
@@ -203,8 +286,8 @@ def parse_expression(expr: str):
         tree = parser.parse(expr)
         return ASTTransformer().transform(tree)
     except Exception:
-        print("In exception")
         return legacy_parse_expression(expr)
+
 
 def legacy_parse_expression(expr: str):
     expr = expr.strip()
@@ -248,6 +331,9 @@ def to_cypher(node):
     if isinstance(node, PropertyAccess):
         return f"{node.var}.{node.prop}"
 
+    if isinstance(node, Variable):
+        return node.name
+
     if isinstance(node, FunctionCall):
         args = ", ".join([to_cypher(arg) for arg in node.args])
         return f"{node.name}({args})"
@@ -270,10 +356,7 @@ def to_cypher(node):
         left = to_cypher(node.left)
         right = to_cypher(node.right)
 
-        operator_map = {
-            "==": "=",
-            "!=": "<>"
-        }
+        operator_map = {"==": "=", "!=": "<>"}
 
         operator = operator_map.get(node.operator, node.operator)
         return f"({left} {operator} {right})"
@@ -285,7 +368,7 @@ def to_cypher(node):
 
     if isinstance(node, BooleanLiteral):
         return "true" if node.value else "false"
-    
+
     if isinstance(node, ListExpression):
         elements = ", ".join([to_cypher(e) for e in node.elements])
         return f"[{elements}]"
@@ -322,7 +405,6 @@ def print_ast(node, level=0):
         print_ast(node.left, level + 1)
         print_ast(node.right, level + 1)
 
-
     elif isinstance(node, LogicalExpression):
         print(f"{indent}{prefix}LogicalExpression: {node.operator}")
         print_ast(node.left, level + 1)
@@ -340,6 +422,10 @@ def print_ast(node, level=0):
         print(f"{indent}{prefix}ListExpression")
         for el in node.elements:
             print_ast(el, level + 1)
+
+    elif isinstance(node, Variable):
+        print(f"{indent}{prefix}Variable")
+        print(f"{indent}    └── name: {node.name}")
 
     else:
         print(f"{indent}{prefix}UnknownNode")
