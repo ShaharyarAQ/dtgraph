@@ -22,10 +22,22 @@ def validate_node(node, schema):
             msg += f"Labels: {labels}\n"
             msg += f"Properties: {node.properties}\n"
 
-            for node_type, errs in errors.items():
+            for node_type, shapes in errors.items():
+
                 msg += f"\nTried type '{node_type}':\n"
-                for e in errs:
-                    msg += f"  - {e}\n"
+
+                for i, shape_info in enumerate(shapes, start=1):
+
+                    shape = shape_info["shape"]
+                    errs = shape_info["errors"]
+
+                    msg += f"\n  Shape {i}:\n"
+                    msg += f"    mandatory: {list(shape['mandatory_properties'].keys())}\n"
+                    msg += f"    optional: {list(shape['optional_properties'].keys())}\n"
+
+                    msg += f"\n    Errors:\n"
+                    for e in errs:
+                        msg += f"      - {e}\n"
 
             raise ValueError(msg)
 

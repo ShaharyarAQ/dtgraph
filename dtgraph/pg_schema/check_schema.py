@@ -23,16 +23,8 @@ def check_schema(rules, schema):
             print("\nRULE FAILED:")
             print(rule)
 
-            msg = str(e)
-            lines = msg.split("\n")
-
-            filtered = [
-                line.strip(" -") for line in lines if line.strip().startswith("-")
-            ]
-
-            reason = filtered[0] if filtered else msg
-
-            print("Reason:", reason)
+            print("Reason:")
+            print(str(e))
 
     if not all_passed:
         raise CompileError("\nSchema conformance failed for one or more rules")

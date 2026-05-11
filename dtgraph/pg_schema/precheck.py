@@ -4,34 +4,51 @@ def precheck_rule(rule_dict, schema):
 
     if "constructors" not in rule_dict:
         raise Exception("Invalid rule: missing constructors")
+    
+    node_registry = {} 
 
     for c in rule_dict["constructors"]:
 
         if "edge" in c:
-            _precheck_edge(c, schema)
+
+            # Validate source node
+            _precheck_node(c["src"], schema, node_registry)
+
+            # Validate target node if labels exist
+            tgt = c.get("tgt", {})
+            if tgt.get("labels"):
+                _precheck_node(tgt, schema, node_registry)
+
+            # Validate edge
+            _precheck_edge(c, schema, node_registry)
+
         else:
-            _precheck_node(c, schema)
+            _precheck_node(c, schema, node_registry)
 
     return True
 
-def _precheck_node(c, schema):
+def _precheck_node(c, schema, registry):
 
-    node = _create_empty_node()
+    alias = c.get("alias")
+
+    if alias in registry:
+        node = registry[alias]
+    else:
+        node = _create_empty_node()
+        if alias:
+            registry[alias] = node
 
     # Labels
-    labels = c.get("labels", [])
-    for l in labels:
+    for l in c.get("labels", []):
         node.labels.add(l)
 
-    # Properties/keys
+    # Properties
     for p in c.get("properties", []):
         node.properties[p["key"]] = _temp_value()
 
-    # Validate against schema
     validate_node(node, schema)
 
-
-def _precheck_edge(c, schema):
+def _precheck_edge(c, schema, registry):
 
     edge_info = c.get("edge")
     src_info = c.get("src")
@@ -46,15 +63,29 @@ def _precheck_edge(c, schema):
 
     edge_label = labels[0]
 
-    # Create simulated nodes
-    source = _create_empty_node()
-    target = _create_empty_node()
+    # Get or create source node
+    src_alias = src_info.get("alias")
+    if src_alias and src_alias in registry:
+        source = registry[src_alias]
+    else:
+        source = _create_empty_node()
+        if src_alias:
+            registry[src_alias] = source
 
-    # Assign labels if present
+    # Get or create target node
+    tgt_alias = tgt_info.get("alias")
+    if tgt_alias and tgt_alias in registry:
+        target = registry[tgt_alias]
+    else:
+        target = _create_empty_node()
+        if tgt_alias:
+            registry[tgt_alias] = target
+
+    # Assign label if present
     source.labels.update(src_info.get("labels", []))
     target.labels.update(tgt_info.get("labels", []))
 
-    # Fallback if labels missing (important!)
+    # Fallback if label missing
     edge_schema = schema["edges"].get(edge_label)
 
     if edge_schema:
@@ -64,16 +95,15 @@ def _precheck_edge(c, schema):
         if not target.labels:
             target.labels.add(edge_schema["to"][0])
 
-    # Create simulated edge
+    # Create edge
     edge = _create_edge(edge_label, source, target)
 
-    # Properties (keys only)
+    # Properties
     for p in edge_info.get("properties", []):
         edge.properties[p["key"]] = _temp_value()
 
     # Validate
     validate_edge(edge, schema)
-
 
 # Helpers
 def _create_empty_node():

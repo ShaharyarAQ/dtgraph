@@ -1,4 +1,5 @@
 # Node matching
+
 def match_node_types(node, schema):
     matched_types = []
     all_errors = {}
@@ -12,19 +13,20 @@ def match_node_types(node, schema):
         if not node_labels.intersection(shape_labels):
             continue
 
-        type_errors = []
+        shape_errors_list = []
 
         for shape in shapes:
             ok, errors = _matches_node_shape(node, shape)
 
             if ok:
-                matched_types.append(node_type_name)
-                break
-            else:
-                type_errors.extend(errors)
+                return [node_type_name], {} 
 
-        if node_type_name not in matched_types:
-            all_errors[node_type_name] = type_errors
+            shape_errors_list.append({
+                "shape": shape,
+                "errors": errors
+            })
+
+        all_errors[node_type_name] = shape_errors_list
 
     return matched_types, all_errors
 
@@ -38,9 +40,8 @@ def _matches_node_shape(node, shape):
     mandatory_labels = set(shape["labels"])
     optional_labels = set(shape["optional_labels"])
 
-    # -------------------------
+
     # Label conformance
-    # -------------------------
 
     # (i) mandatory ⊆ node labels
     if not mandatory_labels.issubset(labels):
@@ -55,21 +56,20 @@ def _matches_node_shape(node, shape):
         if invalid:
             errors.append(f"Invalid extra labels: {invalid}")
 
-    # -------------------------
+
     # Property conformance
-    # -------------------------
 
     mandatory_props = shape["mandatory_properties"]
     optional_props = shape["optional_properties"]
 
-    # (iii) mandatory properties
+    # Mandatory properties
     for prop_name, prop_def in mandatory_props.items():
         if prop_name not in props:
             errors.append(f"Missing property: '{prop_name}'")
         elif not _check_type(props[prop_name], prop_def["type"]):
             errors.append(f"Wrong type for '{prop_name}'")
 
-    # (iv) property validation
+    # Property validation
     for prop_name, value in props.items():
 
         if prop_name in mandatory_props:
@@ -87,20 +87,6 @@ def _matches_node_shape(node, shape):
 
 
 # Edge matching
-# def match_edge_types(edge, schema):
-#     matched_types = []
-#     all_errors = {}
-
-#     for edge_type_name, edge_type in schema["edges"].items():
-#         ok, errors = _matches_edge_type(edge, edge_type_name, edge_type, schema)
-
-#         if ok:
-#             matched_types.append(edge_type_name)
-#         else:
-#             all_errors[edge_type_name] = errors
-
-#     return matched_types, all_errors
-
 
 def match_edge_types(edge, schema):
     edge_type_name = edge.type
@@ -127,16 +113,12 @@ def match_edge_types(edge, schema):
 def _matches_edge_type(edge, edge_type_name, edge_type, schema):
     errors = []
 
-    # -------------------------
     # Edge type check
-    # -------------------------
     if edge.type != edge_type_name:
         errors.append(f"Edge type mismatch: expected '{edge_type_name}', got '{edge.type}'")
         return False, errors
 
-    # -------------------------
     # Source check
-    # -------------------------
     source_labels = edge.source.labels
 
     if not any(label in edge_type["from"] for label in source_labels):
@@ -144,9 +126,7 @@ def _matches_edge_type(edge, edge_type_name, edge_type, schema):
             f"Invalid source node type: got {list(source_labels)}, expected one of {edge_type['from']}"
         )
 
-    # -------------------------
     # Target check
-    # -------------------------
     target_labels = edge.target.labels
 
     if not any(label in edge_type["to"] for label in target_labels):
@@ -154,9 +134,7 @@ def _matches_edge_type(edge, edge_type_name, edge_type, schema):
             f"Invalid target node type: got {list(target_labels)}, expected one of {edge_type['to']}"
         )
 
-    # -------------------------
     # Property checks
-    # -------------------------
     props = edge.properties
 
     mandatory_props = edge_type["mandatory_properties"]
@@ -187,16 +165,18 @@ def _matches_edge_type(edge, edge_type_name, edge_type, schema):
 
 # Type checking
 def _check_type(value, expected_type):
-    if expected_type == "string":
-        return isinstance(value, str)
+    ## Skip type checking here becuase it is checked in type checking pipeline
 
-    if expected_type == "integer":
-        return isinstance(value, int)
+    # if expected_type == "string":
+    #     return isinstance(value, str)
 
-    if expected_type == "float":
-        return isinstance(value, float)
+    # if expected_type == "integer":
+    #     return isinstance(value, int)
 
-    if expected_type == "boolean":
-        return isinstance(value, bool)
+    # if expected_type == "float":
+    #     return isinstance(value, float)
+
+    # if expected_type == "boolean":
+    #     return isinstance(value, bool)
 
     return True
