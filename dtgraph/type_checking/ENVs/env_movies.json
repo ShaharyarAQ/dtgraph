@@ -22,6 +22,12 @@
     "years": "bag[integer]",
     "releaseDate": "string"
   },
+  "variables": {
+    "emails": "set[string]",
+    "phones": "bag[string]",
+    "ssns": "bag[string]",
+    "amounts": "bag[float]"
+  },
   "functions": {
     "toString": {
       "inputs": [

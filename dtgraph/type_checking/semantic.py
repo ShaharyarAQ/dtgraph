@@ -429,3 +429,100 @@ def print_ast(node, level=0):
 
     else:
         print(f"{indent}{prefix}UnknownNode")
+
+
+### LHS validation for properties and variables
+def add_validation(rule_dict):
+
+    props = set()
+    vars = set()
+
+    # Extract dependencies from AST
+    for c in rule_dict.get("constructors", []):
+
+        objs = []
+
+        if "edge" in c:
+            objs.extend([c["src"], c["edge"], c["tgt"]])
+        else:
+            objs.append(c)
+
+        for obj in objs:
+            if not obj.get("labels"):
+                continue
+
+            for prop in obj.get("properties", []):
+                ast = prop.get("ast") or parse_expression(prop["value"].strip())
+                extract_dependencies(ast, props, vars)
+
+    # Build conditions
+    conditions = set()
+
+    for var, prop in props:
+        conditions.add(f"{var}.{prop} IS NOT NULL")
+
+    for v in vars:
+        conditions.add(f"{v} IS NOT NULL")
+
+    if not conditions:
+        return props, vars
+
+    # Inject into LHS
+    lhs = rule_dict["lhs"]
+
+    existing_conditions = set()
+
+    if "WHERE" in lhs:
+        before_where, after_where = lhs.split("WHERE", 1)
+
+        # Split existing conditions safely
+        existing_conditions = set(
+            [c.strip() for c in after_where.split("AND") if c.strip()]
+        )
+
+        new_conditions = conditions - existing_conditions
+
+        if new_conditions:
+            updated_where = after_where.strip() + " AND " + " AND ".join(sorted(new_conditions))
+        else:
+            updated_where = after_where.strip()
+
+        lhs = before_where.strip() + "\nWHERE " + updated_where
+
+    else:
+        lhs = lhs.strip() + "\nWHERE " + " AND ".join(sorted(conditions))
+
+    rule_dict["lhs"] = lhs
+    print("Updated LHS:\n", rule_dict["lhs"])
+    return props, vars
+
+def extract_dependencies(node, props, vars):
+
+    if isinstance(node, PropertyAccess):
+        props.add((node.var, node.prop))
+
+    elif isinstance(node, Variable):
+        vars.add(node.name)
+
+    elif isinstance(node, FunctionCall):
+        for arg in node.args:
+            extract_dependencies(arg, props, vars)
+
+    elif isinstance(node, BinaryExpression):
+        extract_dependencies(node.left, props, vars)
+        extract_dependencies(node.right, props, vars)
+
+    elif isinstance(node, UnaryExpression):
+        extract_dependencies(node.operand, props, vars)
+
+    elif isinstance(node, ComparisonExpression):
+        extract_dependencies(node.left, props, vars)
+        extract_dependencies(node.right, props, vars)
+
+    elif isinstance(node, LogicalExpression):
+        extract_dependencies(node.left, props, vars)
+        extract_dependencies(node.right, props, vars)
+
+    elif isinstance(node, ListExpression):
+        for el in node.elements:
+            extract_dependencies(el, props, vars)

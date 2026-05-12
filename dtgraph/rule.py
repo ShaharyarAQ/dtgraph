@@ -12,6 +12,8 @@ from dtgraph.exceptions import RuleInitializationError
 ###########################################
 import re
 
+from dtgraph.type_checking.semantic import add_validation
+
 
 def should_expand(ascii: str) -> bool:
     
@@ -191,38 +193,6 @@ class Rule(object):
     ):
         # the compilation step is not idempotent
         if self._compiled is None:
-            # compiler = Compiler(
-            #     database, with_diagnose=with_diagnose, explain=explain, profile=profile
-            # )
-
-            env = getattr(self, "_env", None)
-            type_strict = getattr(self, "_type_strict", False)
-
-            # Type checking (if enabled)
-            # if env and type_strict:
-            #     if self._dict is None:
-            #         raise Exception("Cannot type check rule without parsed structure")
-
-            #     from type_checking.pipeline import TypeCheckingPipeline
-            #     from dtgraph.exceptions import CompileError
-
-            #     pipeline = TypeCheckingPipeline(env)
-                
-
-            #     try:
-            #         pipeline.run([self])
-            #     except Exception as e:
-            #         msg = str(e)
-            #         lines = msg.split("\n")
-            #         filtered = [line.strip(" -") for line in lines if line.strip().startswith("-")]
-
-            #         reason = filtered[0] if filtered else msg
-
-            #         raise CompileError(
-            #             f"\nType checking failed for rule:\n{self}\n\nReason: {reason}"
-            #         )
-
-
             compiler = Compiler(
             database,
             env=self._env if hasattr(self, "_env") else None,
@@ -232,6 +202,9 @@ class Rule(object):
             profile=profile
             )
             
+            print("Before compiling LHS: ", self._dict['lhs'])
+            ## Addng property and variable validation
+            add_validation(self._dict)
             self._compiled = compiler.compile(self._dict)
 
     def apply_on(self, graph, with_diagnose=True, explain=False, profile=False) -> int:
