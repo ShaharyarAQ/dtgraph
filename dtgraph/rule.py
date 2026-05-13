@@ -12,7 +12,7 @@ from dtgraph.exceptions import RuleInitializationError
 ###########################################
 import re
 
-from dtgraph.type_checking.semantic import add_validation
+from dtgraph.type_checking.semantic import extract_dependencies_from_lhs, inject_validation_in_lhs
 
 
 def should_expand(ascii: str) -> bool:
@@ -164,9 +164,6 @@ class Rule(object):
             self._dict = {"lhs": lhs, "constructors": rhs_dict["constructors"]}
         # elif ascii:
         #     self._dict = RuleParser.parseString(ascii, parseAll=True).asDict()
-        # elif ascii:
-        #     ascii = expand_pattern(ascii)
-        #     self._dict = RuleParser.parseString(ascii, parseAll=True).asDict()
         elif ascii:
             if should_expand(ascii):
                 ascii = expand_pattern(ascii)
@@ -191,6 +188,7 @@ class Rule(object):
     def _compile(
         self, database="neo4j", with_diagnose=True, explain=False, profile=False
     ):
+        
         # the compilation step is not idempotent
         if self._compiled is None:
             compiler = Compiler(
@@ -201,10 +199,7 @@ class Rule(object):
             explain=explain,
             profile=profile
             )
-            
-            print("Before compiling LHS: ", self._dict['lhs'])
-            ## Addng property and variable validation
-            add_validation(self._dict)
+
             self._compiled = compiler.compile(self._dict)
 
     def apply_on(self, graph, with_diagnose=True, explain=False, profile=False) -> int:
@@ -216,6 +211,24 @@ class Rule(object):
         graph : dtgraph.backend.neo4j.graph.Neo4jGraph
             Graph to be transformed by the rule.
         """
+
+        # Always run validation
+        print("Before LHS:", self._dict["lhs"], flush=True)
+
+        props, vars = extract_dependencies_from_lhs(self._dict)
+        print("props:", props, flush=True)
+
+        if props or vars:
+            old_lhs = self._dict["lhs"]
+            inject_validation_in_lhs(self._dict, props, vars)
+
+            # Invalidate cache if changed
+            if self._dict["lhs"] != old_lhs:
+                self._compiled = None
+
+        print("After LHS:", self._dict["lhs"], flush=True)
+        ###
+
         if self._compiled is None:
             self._compile(
                 graph.database,

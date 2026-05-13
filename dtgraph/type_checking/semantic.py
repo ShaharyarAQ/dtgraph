@@ -121,11 +121,6 @@ class SemanticAnalyzer:
 
                 expected_types = expected if isinstance(expected, list) else [expected]
 
-                # if not any(t in expected_types for t in actual):
-                #     raise Exception(
-                #         f"Function '{node.name}' expected {expected_types}, got {actual}"
-                #     )
-
                 if not any(is_compatible(a, e) for a in actual for e in expected_types):
                     raise Exception(
                         f"Function '{node.name}' expected {expected_types}, got {actual}"
@@ -151,19 +146,6 @@ class SemanticAnalyzer:
 
             for l in left_types:
                 for r in right_types:
-
-                    # if node.operator in ["+", "-", "*", "/"]:
-
-                    #     if l == "integer" and r == "integer":
-                    #         result.append("integer")
-
-                    #     elif node.operator == "+" and l == "string" and r == "string":
-                    #         result.append("string")
-
-                    #     else:
-                    #         raise Exception(
-                    #         f"Invalid operation: {l} {node.operator} {r}"
-                    #         )
 
                     if node.operator in ["+", "-", "*", "/"]:
 
@@ -192,18 +174,6 @@ class SemanticAnalyzer:
 
         if isinstance(node, BooleanLiteral):
             return ["boolean"]
-
-        # if isinstance(node, UnaryExpression):
-
-        #     operand = self.infer_type(node.operand)
-
-        #     if node.operator == "-" and "integer" in operand:
-        #         return ["integer"]
-
-        #     if node.operator == "NOT" and "boolean" in operand:
-        #         return ["boolean"]
-
-        #     raise Exception(f"Invalid unary operation: {node.operator} {operand}")
 
         if isinstance(node, UnaryExpression):
 
@@ -234,9 +204,6 @@ class SemanticAnalyzer:
 
                         if node.operator in ["==", "!="]:
                             return ["boolean"]
-
-                        # if l == "integer" and node.operator in [">", "<", ">=", "<="]:
-                        #     return ["boolean"]
 
                         if node.operator in [">", "<", ">=", "<="]:
                             if l in ["integer", "float"] and r in ["integer", "float"]:
@@ -432,14 +399,12 @@ def print_ast(node, level=0):
 
 
 ### LHS validation for properties and variables
-def add_validation(rule_dict):
 
+def extract_dependencies_from_lhs(rule_dict):
     props = set()
     vars = set()
 
-    # Extract dependencies from AST
     for c in rule_dict.get("constructors", []):
-
         objs = []
 
         if "edge" in c:
@@ -448,52 +413,10 @@ def add_validation(rule_dict):
             objs.append(c)
 
         for obj in objs:
-            if not obj.get("labels"):
-                continue
-
             for prop in obj.get("properties", []):
                 ast = prop.get("ast") or parse_expression(prop["value"].strip())
                 extract_dependencies(ast, props, vars)
 
-    # Build conditions
-    conditions = set()
-
-    for var, prop in props:
-        conditions.add(f"{var}.{prop} IS NOT NULL")
-
-    for v in vars:
-        conditions.add(f"{v} IS NOT NULL")
-
-    if not conditions:
-        return props, vars
-
-    # Inject into LHS
-    lhs = rule_dict["lhs"]
-
-    existing_conditions = set()
-
-    if "WHERE" in lhs:
-        before_where, after_where = lhs.split("WHERE", 1)
-
-        # Split existing conditions safely
-        existing_conditions = set(
-            [c.strip() for c in after_where.split("AND") if c.strip()]
-        )
-
-        new_conditions = conditions - existing_conditions
-
-        if new_conditions:
-            updated_where = after_where.strip() + " AND " + " AND ".join(sorted(new_conditions))
-        else:
-            updated_where = after_where.strip()
-
-        lhs = before_where.strip() + "\nWHERE " + updated_where
-
-    else:
-        lhs = lhs.strip() + "\nWHERE " + " AND ".join(sorted(conditions))
-
-    rule_dict["lhs"] = lhs
-    print("Updated LHS:\n", rule_dict["lhs"])
     return props, vars
 
 def extract_dependencies(node, props, vars):
@@ -526,3 +449,32 @@ def extract_dependencies(node, props, vars):
     elif isinstance(node, ListExpression):
         for el in node.elements:
             extract_dependencies(el, props, vars)
+
+
+def inject_validation_in_lhs(rule_dict, props, vars):
+
+    conditions = set()
+
+    for var, prop in props:
+        conditions.add(f"{var}.{prop} IS NOT NULL")
+
+    # for v in vars:
+    #     conditions.add(f"{v} IS NOT NULL")
+
+    if not conditions:
+        return
+
+    lhs = rule_dict["lhs"]
+
+    if "WHERE" in lhs:
+        before, after = lhs.split("WHERE", 1)
+
+        existing = set(c.strip() for c in after.split("AND") if c.strip())
+        new_conditions = conditions - existing
+
+        if new_conditions:
+            lhs = before.strip() + "\nWHERE " + after.strip() + " AND " + " AND ".join(sorted(new_conditions))
+    else:
+        lhs = lhs.strip() + "\nWHERE " + " AND ".join(sorted(conditions))
+
+    rule_dict["lhs"] = lhs
