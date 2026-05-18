@@ -212,11 +212,12 @@ class Rule(object):
             Graph to be transformed by the rule.
         """
 
+        print("self._dict: ", self._dict , "\n")
         # Always run validation
-        print("Before LHS:", self._dict["lhs"], flush=True)
+        print("Before LHS Validation:\n", self._dict["lhs"], flush=True)
 
         props, vars = extract_dependencies_from_lhs(self._dict)
-        print("props:", props, flush=True)
+        print("\nprops:", props, "\n", flush=True)
 
         if props or vars:
             old_lhs = self._dict["lhs"]
@@ -226,7 +227,7 @@ class Rule(object):
             if self._dict["lhs"] != old_lhs:
                 self._compiled = None
 
-        print("After LHS:", self._dict["lhs"], flush=True)
+        print("After LHS Validation:\n", self._dict["lhs"], flush=True)
         ###
 
         if self._compiled is None:

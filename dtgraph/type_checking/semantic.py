@@ -398,7 +398,7 @@ def print_ast(node, level=0):
         print(f"{indent}{prefix}UnknownNode")
 
 
-### LHS validation for properties and variables
+########## LHS validation for properties and variables ##########
 
 def extract_dependencies_from_lhs(rule_dict):
     props = set()
@@ -453,28 +453,98 @@ def extract_dependencies(node, props, vars):
 
 def inject_validation_in_lhs(rule_dict, props, vars):
 
-    conditions = set()
-
-    for var, prop in props:
-        conditions.add(f"{var}.{prop} IS NOT NULL")
-
-    # for v in vars:
-    #     conditions.add(f"{v} IS NOT NULL")
+    # Build conditions ONLY for properties
+    conditions = sorted({f"{v}.{p} IS NOT NULL" for v, p in props})
 
     if not conditions:
         return
 
     lhs = rule_dict["lhs"]
 
-    if "WHERE" in lhs:
-        before, after = lhs.split("WHERE", 1)
+    # Step 1: split into clauses
+    clauses = split_clauses(lhs)
 
-        existing = set(c.strip() for c in after.split("AND") if c.strip())
-        new_conditions = conditions - existing
+    # Step 2: extract existing WHERE
+    clauses, existing_where = extract_where(clauses)
 
-        if new_conditions:
-            lhs = before.strip() + "\nWHERE " + after.strip() + " AND " + " AND ".join(sorted(new_conditions))
-    else:
-        lhs = lhs.strip() + "\nWHERE " + " AND ".join(sorted(conditions))
+    # Step 3: merge conditions
+    new_conditions = " AND ".join(conditions)
+    combined_where = inject_conditions(existing_where, new_conditions)
 
-    rule_dict["lhs"] = lhs
+    # Step 4: rebuild query
+    new_lhs = rebuild_query(clauses, combined_where)
+
+    rule_dict["lhs"] = new_lhs
+
+
+
+def split_clauses(lhs):
+    parts = re.split(r"\b(MATCH|OPTIONAL MATCH|WITH|WHERE|RETURN|LIMIT)\b", lhs)
+
+    clauses = []
+    i = 0
+    while i < len(parts) - 1:
+        keyword = parts[i+1]
+        content = parts[i+2]
+        clauses.append((keyword, content.strip()))
+        i += 2
+
+    return clauses
+
+def extract_where(clauses):
+    new_clauses = []
+    where_conditions = []
+
+    for keyword, content in clauses:
+        if keyword == "WHERE":
+            where_conditions.append(content)
+        else:
+            new_clauses.append((keyword, content))
+
+    return new_clauses, where_conditions
+
+def inject_conditions(existing_where, new_conditions):
+
+    # Extract existing conditions into a set
+    existing_set = set()
+    for cond in existing_where:
+        for c in cond.split("AND"):
+            c = c.strip()
+            if c:
+                existing_set.add(c)
+
+    # Extract new conditions into a set
+    new_set = set()
+    for c in new_conditions.split("AND"):
+        c = c.strip()
+        if c:
+            new_set.add(c)
+
+    # Merge without duplicates
+    final_conditions = existing_set.union(new_set)
+
+    return " AND ".join(sorted(final_conditions))
+
+def rebuild_query(clauses, where_clause):
+
+    rebuilt = []
+    inserted = False
+
+    for i, (keyword, content) in enumerate(clauses):
+
+        if keyword in ["MATCH", "OPTIONAL MATCH"]:
+            rebuilt.append(f"{keyword} {content}")
+            continue
+
+        # Insert WHERE before first WITH
+        if keyword == "WITH" and not inserted:
+            rebuilt.append(f"WHERE {where_clause}")
+            inserted = True
+
+        rebuilt.append(f"{keyword} {content}")
+
+    # If no WITH, append WHERE after MATCH block
+    if not inserted:
+        rebuilt.append(f"WHERE {where_clause}")
+
+    return "\n".join(rebuilt)
