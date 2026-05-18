@@ -212,7 +212,7 @@ class Rule(object):
             Graph to be transformed by the rule.
         """
 
-        print("self._dict: ", self._dict , "\n")
+        print("\nself._dict: ", self._dict , "\n")
         # Always run validation
         print("Before LHS Validation:\n", self._dict["lhs"], flush=True)
 
@@ -227,7 +227,7 @@ class Rule(object):
             if self._dict["lhs"] != old_lhs:
                 self._compiled = None
 
-        print("After LHS Validation:\n", self._dict["lhs"], flush=True)
+        print("After LHS Validation:\n", self._dict["lhs"], "\n",  flush=True)
         ###
 
         if self._compiled is None:
