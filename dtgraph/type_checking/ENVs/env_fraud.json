@@ -7,6 +7,7 @@
     "ssn": "string",
     "amount": "float"
   },
+
   "target": {
     "id": "string",
     "name": "string",
@@ -14,29 +15,43 @@
     "email": "string",
     "phone": "string",
     "ssn": "string",
-    "original_amount": "float",
-    "formatted_amount": "float",
-    "is_large_amount": "boolean",
-    "wrong": "bag[float]"
+
+    "all_amounts": "bag[float]",
+    "count": "integer",
+
+    "from_amount": "float",
+    "to_amount": "float",
+    "increasing": "boolean",
+
+    "amount": "float"
   },
+
   "variables": {
     "emails": "set[string]",
-    "phones": "bag[string]",
-    "ssns": "bag[string]",
+    "phones": "set[string]",
+    "ssns": "set[string]",
     "amounts": "bag[float]"
   },
+
   "functions": {
     "head": {
       "inputs": ["bag[string]"],
       "output": "string"
     },
+
     "apoc.text.upperCamelCase": {
       "inputs": ["string"],
       "output": "string"
     },
+
     "round": {
       "inputs": ["float"],
       "output": "float"
+    },
+
+    "size": {
+      "inputs": ["bag[float]"],
+      "output": "integer"
     }
   }
 }

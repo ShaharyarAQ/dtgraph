@@ -1,0 +1,173 @@
+{
+  "strict": true,
+
+  "nodes": {
+
+    "Client": [
+      {
+        "labels": ["Client"],
+        "optional_labels": ["Mule"],
+        "open_labels": false,
+        "mandatory_properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "Email": [
+      {
+        "labels": ["Email"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "email": { "type": "string" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "Phone": [
+      {
+        "labels": ["Phone"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "phoneNumber": { "type": "string" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "SSN": [
+      {
+        "labels": ["SSN"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "ssn": { "type": "string" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "Transaction": [
+      {
+        "labels": ["Transaction"],
+        "optional_labels": ["CashIn", "CashOut", "Payment", "Transfer", "Debit"],
+        "open_labels": false,
+        "mandatory_properties": {
+          "id": { "type": "string" },
+          "amount": { "type": "float" }
+        },
+        "optional_properties": {
+          "fraud": { "type": "boolean" },
+          "globalStep": { "type": "integer" },
+          "step": { "type": "integer" },
+          "ts": { "type": "integer" }
+        },
+        "open_properties": false
+      }
+    ],
+
+    "Bank": [
+      {
+        "labels": ["Bank"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "Merchant": [
+      {
+        "labels": ["Merchant"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ]
+  },
+
+  "edges": {
+
+    "PERFORMED": {
+      "from": ["Client"],
+      "to": ["Transaction"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "TO": {
+      "from": ["Transaction"],
+      "to": ["Client", "Merchant", "Bank"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "HAS_EMAIL": {
+      "from": ["Client"],
+      "to": ["Email"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "HAS_PHONE": {
+      "from": ["Client"],
+      "to": ["Phone"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "HAS_SSN": {
+      "from": ["Client"],
+      "to": ["SSN"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "NEXT": {
+      "from": ["Transaction"],
+      "to": ["Transaction"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "FIRST_TX": {
+      "from": ["Client"],
+      "to": ["Transaction"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "LAST_TX": {
+      "from": ["Client"],
+      "to": ["Transaction"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    }
+  }
+}

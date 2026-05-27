@@ -1,0 +1,227 @@
+{
+  "strict": true,
+
+  "nodes": {
+
+  "Person": [
+      {
+        "labels": ["Person"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" }
+        },
+        "optional_properties": {
+          "name_camel_case": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "ssn": { "type": "string" }
+        },
+        "open_properties": false
+      },
+      {
+        "labels": ["Person", "Scammer"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" }
+        },
+        "optional_properties": {
+          "name_camel_case": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "ssn": { "type": "string" }
+        },
+        "open_properties": false
+      }
+
+    ],
+
+    "CashInSummary": [
+      {
+        "labels": ["CashInSummary"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "all_amounts": { "type": "bag[float]" },
+          "count": { "type": "integer" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "CashOutSummary": [
+      {
+        "labels": ["CashOutSummary"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "all_amounts": { "type": "bag[float]" },
+          "count": { "type": "integer" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "TransferSummary": [
+      {
+        "labels": ["TransferSummary"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "all_amounts": { "type": "bag[float]" },
+          "count": { "type": "integer" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "PaymentSummary": [
+      {
+        "labels": ["PaymentSummary"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "all_amounts": { "type": "bag[float]" },
+          "count": { "type": "integer" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "DebitSummary": [
+      {
+        "labels": ["DebitSummary"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "all_amounts": { "type": "bag[float]" },
+          "count": { "type": "integer" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "TransactionFlow": [
+      {
+        "labels": ["TransactionFlow"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "from_amount": { "type": "float" },
+          "to_amount": { "type": "float" },
+          "increasing": { "type": "boolean" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "NewTransaction": [
+      {
+        "labels": ["NewTransaction"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "id": { "type": "string" },
+          "amount": { "type": "float" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "Destination": [
+      {
+        "labels": ["Destination"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {},
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ]
+  },
+
+  "edges": {
+
+    "AGGREGATED_CASHIN": {
+      "from": ["Person"],
+      "to": ["CashInSummary"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "AGGREGATED_CASHOUT": {
+      "from": ["Person"],
+      "to": ["CashOutSummary"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "AGGREGATED_TRANSFER": {
+      "from": ["Person"],
+      "to": ["TransferSummary"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "AGGREGATED_PAYMENT": {
+      "from": ["Person"],
+      "to": ["PaymentSummary"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "AGGREGATED_DEBIT": {
+      "from": ["Person"],
+      "to": ["DebitSummary"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "STARTED_BY": {
+      "from": ["TransactionFlow"],
+      "to": ["Person"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "FROM_TX": {
+      "from": ["TransactionFlow"],
+      "to": ["NewTransaction"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "TO_TX": {
+      "from": ["TransactionFlow"],
+      "to": ["NewTransaction"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "TARGET": {
+      "from": ["TransactionFlow"],
+      "to": ["Destination"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    }
+  }
+}
