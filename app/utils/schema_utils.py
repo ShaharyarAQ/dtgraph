@@ -76,6 +76,9 @@ def shape_choices(schema, selected_node):
         for i, shape in enumerate(schema["nodes"][selected_node])
     ]
 
+def update_schema_strict(schema, strict):
+    schema["strict"] = strict
+    return (*refresh(schema), f"Set schema strict = {strict}.")
 
 def update_shape_dropdown(schema, selected_node):
     choices = shape_choices(schema, selected_node)

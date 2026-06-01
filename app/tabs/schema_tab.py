@@ -8,6 +8,7 @@ from utils.schema_utils import (
     clear_edge_fields,
     add_node,
     delete_node,
+    update_schema_strict,
     update_shape_dropdown,
     add_shape,
     load_shape,
@@ -25,7 +26,15 @@ def render_schema_tab(title, schema_state):
 
     status = gr.Textbox(label="Status", interactive=False)
 
-    gr.Markdown("### 1. Add Node")
+    
+    with gr.Row():
+        schema_strict = gr.Checkbox(
+            label="Strict schema",
+            value=True,
+            scale=1
+        )
+
+    gr.Markdown("## Add Node")
 
     with gr.Row():
         node_key_input = gr.Textbox(label="Node key", placeholder="Person")
@@ -35,29 +44,31 @@ def render_schema_tab(title, schema_state):
         selected_node = gr.Dropdown(label="Selected node", choices=[], interactive=True)
         delete_node_btn = gr.Button("Delete Selected Node")
 
-    gr.Markdown("### 2. Add / Edit Shape for Selected Node")
+    gr.Markdown("## Add / Edit Shape for Selected Node")
 
     with gr.Row():
-        selected_shape = gr.Dropdown(label="Selected shape", choices=[], interactive=True)
+        selected_shape = gr.Dropdown(
+            label="Selected shape", choices=[], interactive=True
+        )
         load_shape_btn = gr.Button("Load Shape")
 
     shape_labels = gr.Textbox(label="Labels", placeholder="Person, Scammer")
-    shape_optional_labels = gr.Textbox(label="Optional labels", placeholder="OptionalLabel")
+    shape_optional_labels = gr.Textbox(
+        label="Optional labels", placeholder="OptionalLabel"
+    )
 
     with gr.Row():
         shape_open_labels = gr.Checkbox(label="open_labels", value=False)
         shape_open_properties = gr.Checkbox(label="open_properties", value=False)
 
     shape_mandatory_properties = gr.Textbox(
-        label="Mandatory properties",
-        lines=4,
-        placeholder="id:string\nname:string"
+        label="Mandatory properties", lines=4, placeholder="id:string\nname:string"
     )
 
     shape_optional_properties = gr.Textbox(
         label="Optional properties",
         lines=4,
-        placeholder="email:string\nphone:string\nssn:string"
+        placeholder="email:string\nphone:string\nssn:string",
     )
 
     with gr.Row():
@@ -65,7 +76,7 @@ def render_schema_tab(title, schema_state):
         update_shape_btn = gr.Button("Update Loaded Shape")
         delete_shape_btn = gr.Button("Delete Selected Shape")
 
-    gr.Markdown("### 3. Add / Edit Edge")
+    gr.Markdown("## Add / Edit Edge")
 
     with gr.Row():
         selected_edge = gr.Dropdown(label="Selected edge", choices=[], interactive=True)
@@ -80,15 +91,11 @@ def render_schema_tab(title, schema_state):
     edge_open_properties = gr.Checkbox(label="open_properties", value=False)
 
     edge_mandatory_properties = gr.Textbox(
-        label="Mandatory properties",
-        lines=3,
-        placeholder="weight:float"
+        label="Mandatory properties", lines=3, placeholder="weight:float"
     )
 
     edge_optional_properties = gr.Textbox(
-        label="Optional properties",
-        lines=3,
-        placeholder="created_at:string"
+        label="Optional properties", lines=3, placeholder="created_at:string"
     )
 
     with gr.Row():
@@ -96,13 +103,19 @@ def render_schema_tab(title, schema_state):
         update_edge_btn = gr.Button("Update Loaded Edge")
         delete_edge_btn = gr.Button("Delete Selected Edge")
 
-    gr.Markdown("### 4. JSON Preview / Download")
+    gr.Markdown("## JSON Preview / Download")
 
     schema_json = gr.Code(
         label="Generated Schema JSON",
         language="json",
         value=pretty_json(empty_schema()),
         lines=24,
+    )
+
+    schema_strict.change(
+    fn=update_schema_strict,
+    inputs=[schema_state, schema_strict],
+    outputs=[selected_node, selected_edge, schema_json, status],
     )
 
     add_node_btn.click(

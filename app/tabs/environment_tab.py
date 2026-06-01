@@ -1,6 +1,6 @@
 import gradio as gr
 
-from utils.env_utils import (
+from utils.environment_utils import (
     empty_env,
     pretty_json,
     clear_property_fields,
@@ -19,7 +19,7 @@ def render_environment_tab(env_state):
 
     status = gr.Textbox(label="Status", interactive=False)
 
-    gr.Markdown("### 1. Add Property / Variable")
+    gr.Markdown("## Add Property / Variable")
 
     section = gr.Radio(
         label="Section",
@@ -35,7 +35,7 @@ def render_environment_tab(env_state):
         add_property_btn = gr.Button("Add / Update", variant="primary")
         delete_property_btn = gr.Button("Delete")
 
-    gr.Markdown("### 2. Add / Edit Function")
+    gr.Markdown("## Add / Edit Function")
 
     with gr.Row():
         selected_function = gr.Dropdown(label="Selected function", choices=[], interactive=True)
@@ -50,7 +50,7 @@ def render_environment_tab(env_state):
         update_function_btn = gr.Button("Update Loaded Function")
         delete_function_btn = gr.Button("Delete Selected Function")
 
-    gr.Markdown("### 3. JSON Preview / Download")
+    gr.Markdown("## JSON Preview / Download")
 
     env_json = gr.Code(
         label="Generated Environment JSON",
