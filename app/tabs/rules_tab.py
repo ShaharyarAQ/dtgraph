@@ -31,7 +31,7 @@ def render_rules_tab(rules_state):
 
     with gr.Row():
         use_env = gr.Checkbox(label="Use created env", value=True)
-        type_strict = gr.Checkbox(label="type_strict", value=False)
+        type_strict = gr.Checkbox(label="Type strict", value=False)
 
     with gr.Row():
         add_rule_btn = gr.Button("Add Rule", variant="primary")

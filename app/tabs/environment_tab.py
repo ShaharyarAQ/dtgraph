@@ -19,36 +19,38 @@ def render_environment_tab(env_state):
 
     status = gr.Textbox(label="Status", interactive=False)
 
-    gr.Markdown("## Add Property / Variable")
+    with gr.Accordion("Properties / Variables", open=False):
+        gr.Markdown("## Add Property / Variable")
 
-    section = gr.Radio(
-        label="Section",
-        choices=["source", "target", "variables"],
-        value="source"
-    )
+        section = gr.Radio(
+            label="Section",
+            choices=["source", "target", "variables"],
+            value="source"
+        )
 
-    with gr.Row():
-        property_name = gr.Textbox(label="Name", placeholder="amount")
-        property_type = gr.Textbox(label="Type", placeholder="float")
+        with gr.Row():
+            property_name = gr.Textbox(label="Name", placeholder="property")
+            property_type = gr.Textbox(label="Type", placeholder="float")
 
-    with gr.Row():
-        add_property_btn = gr.Button("Add / Update", variant="primary")
-        delete_property_btn = gr.Button("Delete")
+        with gr.Row():
+            add_property_btn = gr.Button("Add / Update", variant="primary")
+            delete_property_btn = gr.Button("Delete", variant="stop")
 
-    gr.Markdown("## Add / Edit Function")
+    with gr.Accordion("Functions", open=False):
+        gr.Markdown("## Add / Edit Function")
 
-    with gr.Row():
-        selected_function = gr.Dropdown(label="Selected function", choices=[], interactive=True)
-        load_function_btn = gr.Button("Load Function")
+        with gr.Row():
+            selected_function = gr.Dropdown(label="Selected function", choices=[], interactive=True)
+            load_function_btn = gr.Button("Load Function")
 
-    function_name = gr.Textbox(label="Function name", placeholder="head")
-    function_inputs = gr.Textbox(label="Input types", placeholder="bag[string]")
-    function_output = gr.Textbox(label="Output type", placeholder="string")
+        function_name = gr.Textbox(label="Function name", placeholder="name")
+        function_inputs = gr.Textbox(label="Input types", placeholder="bag[string]")
+        function_output = gr.Textbox(label="Output type", placeholder="string")
 
-    with gr.Row():
-        add_function_btn = gr.Button("Add Function", variant="primary")
-        update_function_btn = gr.Button("Update Loaded Function")
-        delete_function_btn = gr.Button("Delete Selected Function")
+        with gr.Row():
+            add_function_btn = gr.Button("Add Function", variant="primary")
+            update_function_btn = gr.Button("Update Loaded Function")
+            delete_function_btn = gr.Button("Delete Loaded Function", variant="stop")
 
     gr.Markdown("## JSON Preview / Download")
 
