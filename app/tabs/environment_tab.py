@@ -2,6 +2,7 @@ import gradio as gr
 
 from utils.environment_utils import (
     empty_env,
+    load_env_from_file,
     pretty_json,
     clear_property_fields,
     clear_function_fields,
@@ -18,6 +19,12 @@ def render_environment_tab(env_state):
     gr.Markdown("## Environment Builder")
 
     status = gr.Textbox(label="Status", interactive=False)
+
+    with gr.Accordion("Upload Environment JSON", open=False):
+        upload_env = gr.File(
+            label="Upload Environment JSON",
+            file_types=[".json"],
+        )
 
     with gr.Accordion("Properties / Variables", open=False):
         gr.Markdown("## Add Property / Variable")
@@ -59,6 +66,17 @@ def render_environment_tab(env_state):
         language="json",
         value=pretty_json(empty_env()),
         lines=22,
+    )
+
+    upload_env.change(
+    fn=load_env_from_file,
+    inputs=[upload_env],
+    outputs=[
+        env_state,
+        env_json,
+        selected_function,
+        status,
+    ],
     )
 
     add_property_btn.click(

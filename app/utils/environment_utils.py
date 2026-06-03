@@ -123,3 +123,46 @@ def delete_function(env, selected_function):
     env["functions"].pop(selected_function, None)
 
     return (*refresh_env(env), f"Deleted function '{selected_function}'.")
+
+
+def load_env_from_file(file):
+    if file is None:
+        env = empty_env()
+
+        return (
+            env,
+            pretty_json(env),
+            gr.update(choices=[], value=None),
+            "Please upload an environment JSON file."
+        )
+
+    try:
+        with open(file.name, "r", encoding="utf-8") as f:
+            env = json.load(f)
+
+        env.setdefault("source", {})
+        env.setdefault("target", {})
+        env.setdefault("variables", {})
+        env.setdefault("functions", {})
+
+        function_choices = list(env["functions"].keys())
+
+        return (
+            env,
+            pretty_json(env),
+            gr.update(
+                choices=function_choices,
+                value=function_choices[0] if function_choices else None,
+            ),
+            f"Loaded environment from '{file.name}'."
+        )
+
+    except Exception as e:
+        env = empty_env()
+
+        return (
+            env,
+            pretty_json(env),
+            gr.update(choices=[], value=None),
+            f"Failed to load environment:\n{str(e)}"
+        )

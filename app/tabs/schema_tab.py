@@ -2,6 +2,7 @@ import gradio as gr
 
 from utils.schema_utils import (
     empty_schema,
+    load_schema_from_file,
     pretty_json,
     clear_node_fields,
     clear_shape_fields,
@@ -25,6 +26,12 @@ def render_schema_tab(title, schema_state):
     gr.Markdown(f"## {title}")
 
     status = gr.Textbox(label="Status", interactive=False)
+
+    with gr.Accordion("Upload Schema JSON", open=False):
+        upload_schema = gr.File(
+            label="Upload Schema JSON",
+            file_types=[".json"],
+        )
 
     with gr.Row():
         schema_strict = gr.Checkbox(label="Strict schema", value=True, scale=1)
@@ -112,6 +119,18 @@ def render_schema_tab(title, schema_state):
         language="json",
         value=pretty_json(empty_schema()),
         lines=24,
+    )
+
+    upload_schema.change(
+        fn=load_schema_from_file,
+        inputs=[upload_schema],
+        outputs=[
+            schema_state,
+            selected_node,
+            selected_edge,
+            schema_json,
+            status,
+        ],
     )
 
     schema_strict.change(

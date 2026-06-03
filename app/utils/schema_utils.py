@@ -263,3 +263,37 @@ def delete_edge(schema, selected_edge):
     schema["edges"].pop(selected_edge, None)
 
     return (*refresh(schema), f"Deleted edge '{selected_edge}'.")
+
+
+def load_schema_from_file(file):
+    if file is None:
+        schema = empty_schema()
+
+        return (
+            schema,
+            *refresh(schema),
+            "Schema upload cleared. Reset to empty schema."
+        )
+
+    try:
+        with open(file.name, "r", encoding="utf-8") as f:
+            schema = json.load(f)
+
+        schema.setdefault("strict", True)
+        schema.setdefault("nodes", {})
+        schema.setdefault("edges", {})
+
+        return (
+            schema,
+            *refresh(schema),
+            f"Loaded schema from '{file.name}'."
+        )
+
+    except Exception as e:
+        schema = empty_schema()
+
+        return (
+            schema,
+            *refresh(schema),
+            f"Failed to load schema:\n{str(e)}"
+        )

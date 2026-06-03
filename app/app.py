@@ -21,12 +21,18 @@ from utils.rules_utils import empty_rules
 
 from tabs.conformance_tab import render_conformance_tab
 
+from tabs.type_checking_tab import render_type_checking_tab
+
+from tabs.transformation_tab import render_transformation_tab
+
 
 with gr.Blocks(title="DTGraph") as app:
+
     source_schema_state = gr.State(empty_schema())
     target_schema_state = gr.State(empty_schema())
     env_state = gr.State(empty_env())
     rules_state = gr.State(empty_rules())
+    transformation_state = gr.State(None)
 
     gr.Markdown("# DTGraph")
 
@@ -56,10 +62,17 @@ with gr.Blocks(title="DTGraph") as app:
         )
 
     with gr.Tab("Type Checking"):
-        gr.Markdown("Type checker will go here.")
+        render_type_checking_tab(
+            rules_state=rules_state,
+            env_state=env_state,
+        )
 
     with gr.Tab("Transformation"):
-        gr.Markdown("Transformation will go here.")
+        render_transformation_tab(
+            rules_state=rules_state,
+            env_state=env_state,
+            transformation_state=transformation_state,
+        )
 
 
 if __name__ == "__main__":
