@@ -62,10 +62,7 @@ def run_transformation(
     uri,
     database,
     username,
-    password,
-    with_diagnose,
-    explain,
-    profile,
+    password
 ):
     log_buffer = io.StringIO()
 
@@ -91,9 +88,9 @@ def run_transformation(
 
         transformation = Transformation(
             rule_objects,
-            with_diagnose=with_diagnose,
-            explain=explain,
-            profile=profile,
+            with_diagnose=False,
+            explain=False,
+            profile=False,
         )
 
         with redirect_stdout(log_buffer):
@@ -176,7 +173,7 @@ def render_transformation_tab(rules_state, env_state, transformation_state):
 
         password = gr.Textbox(
             label="Password",
-            value="internship",
+            value="",
             type="password",
         )
 
@@ -188,22 +185,6 @@ def render_transformation_tab(rules_state, env_state, transformation_state):
     )
 
     refresh_rules_btn = gr.Button("Refresh Rules")
-
-    with gr.Row():
-        with_diagnose = gr.Checkbox(
-            label="with_diagnose",
-            value=True,
-        )
-
-        explain = gr.Checkbox(
-            label="EXPLAIN",
-            value=False,
-        )
-
-        profile = gr.Checkbox(
-            label="PROFILE",
-            value=False,
-        )
 
     with gr.Row():
         run_btn = gr.Button(
@@ -237,10 +218,7 @@ def render_transformation_tab(rules_state, env_state, transformation_state):
             uri,
             database,
             username,
-            password,
-            with_diagnose,
-            explain,
-            profile,
+            password
         ],
         outputs=[
             transformation_state,
