@@ -125,6 +125,24 @@ def delete_function(env, selected_function):
     return (*refresh_env(env), f"Deleted function '{selected_function}'.")
 
 
+def validate_env_structure(env):
+    required_keys = ["source", "target", "variables", "functions"]
+    errors = []
+
+    if not isinstance(env, dict):
+        return ["Environment JSON must be an object."]
+
+    for key in required_keys:
+        if key not in env:
+            errors.append(f"Missing '{key}'.")
+
+    for key in required_keys:
+        if key in env and not isinstance(env[key], dict):
+            errors.append(f"'{key}' must be an object.")
+
+    return errors
+
+
 def load_env_from_file(file):
     if file is None:
         env = empty_env()
@@ -140,10 +158,18 @@ def load_env_from_file(file):
         with open(file.name, "r", encoding="utf-8") as f:
             env = json.load(f)
 
-        env.setdefault("source", {})
-        env.setdefault("target", {})
-        env.setdefault("variables", {})
-        env.setdefault("functions", {})
+        errors = validate_env_structure(env)
+
+        if errors:
+            empty = empty_env()
+
+            return (
+                empty,
+                pretty_json(empty),
+                gr.update(choices=[], value=None),
+                "Invalid environment JSON:\n"
+                + "\n".join(f"- {error}" for error in errors)
+            )
 
         function_choices = list(env["functions"].keys())
 

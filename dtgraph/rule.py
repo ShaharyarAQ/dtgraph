@@ -162,8 +162,6 @@ class Rule(object):
         elif lhs and ascii:
             rhs_dict = RightHandSide.parseString(ascii, parseAll=True).asDict()
             self._dict = {"lhs": lhs, "constructors": rhs_dict["constructors"]}
-        # elif ascii:
-        #     self._dict = RuleParser.parseString(ascii, parseAll=True).asDict()
         elif ascii:
             if should_expand(ascii):
                 ascii = expand_pattern(ascii)
@@ -171,6 +169,8 @@ class Rule(object):
             self._dict = RuleParser.parseString(ascii, parseAll=True).asDict()
         else:
             raise RuleInitializationError("Invalid set of parameters.")
+        
+        self._check_types()
 
     @classmethod
     def from_ascii(cls, ascii, lhs=None):
@@ -212,12 +212,12 @@ class Rule(object):
             Graph to be transformed by the rule.
         """
 
-        print("\nself._dict: ", self._dict , "\n")
+        # print("\nself._dict: ", self._dict , "\n")
         # Always run validation
-        print("Before LHS Validation:\n", self._dict["lhs"], flush=True)
+        # print("Before LHS Validation:\n", self._dict["lhs"], flush=True)
 
         props, vars = extract_dependencies_from_lhs(self._dict)
-        print("\nprops:", props, "\n", flush=True)
+        # print("\nprops:", props, "\n", flush=True)
 
         if props or vars:
             old_lhs = self._dict["lhs"]
@@ -227,7 +227,7 @@ class Rule(object):
             if self._dict["lhs"] != old_lhs:
                 self._compiled = None
 
-        print("After LHS Validation:\n", self._dict["lhs"], "\n",  flush=True)
+        # print("After LHS Validation:\n", self._dict["lhs"], "\n",  flush=True)
         ###
 
         if self._compiled is None:
@@ -247,3 +247,17 @@ class Rule(object):
         if self._dict:
             repr += "Source dictionary:\n" + str(self._dict)
         return repr
+    
+    def _check_types(self):
+        env = getattr(self, "_env", None)
+        type_strict = getattr(self, "_type_strict", False)
+
+        if env is None or not type_strict:
+            return
+
+        if self._dict is None:
+            return
+
+        from dtgraph.type_checking.check_types import check_types
+
+        check_types([self], env)

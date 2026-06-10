@@ -36,23 +36,27 @@ with gr.Blocks(title="DTGraph") as app:
 
     gr.Markdown("# DTGraph")
 
+    with gr.Tab("Environment"):
+        render_environment_tab(env_state)
+
     with gr.Tab("Source Schema"):
         render_schema_tab(
             title="Source Schema Builder",
             schema_state=source_schema_state,
+            env_state=env_state,
+            env_section="source",
         )
 
     with gr.Tab("Target Schema"):
         render_schema_tab(
             title="Target Schema Builder",
             schema_state=target_schema_state,
+            env_state=env_state,
+            env_section="target",
         )
 
-    with gr.Tab("Environment"):
-        render_environment_tab(env_state)
-
     with gr.Tab("Rules"):
-        render_rules_tab(rules_state)
+        render_rules_tab(rules_state, env_state)
 
     with gr.Tab("Schema Conformance"):
         render_conformance_tab(
@@ -61,11 +65,11 @@ with gr.Blocks(title="DTGraph") as app:
             env_state=env_state,
         )
 
-    with gr.Tab("Type Checking"):
-        render_type_checking_tab(
-            rules_state=rules_state,
-            env_state=env_state,
-        )
+    # with gr.Tab("Type Checking"):
+    #     render_type_checking_tab(
+    #         rules_state=rules_state,
+    #         env_state=env_state,
+    #     )
 
     with gr.Tab("Transformation"):
         render_transformation_tab(

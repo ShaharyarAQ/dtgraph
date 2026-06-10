@@ -18,5 +18,5 @@ class TypeCheckingPipeline:
             print(rule._dict)
             self.analyzer.analyze(rule._dict)
 
-        print("\n All rules passed type checking\n")
+        print("\n Type checking passed\n")
         return rules

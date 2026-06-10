@@ -8,13 +8,20 @@ from utils.rules_utils import (
     load_rule,
     update_rule,
     delete_rule,
+    load_rules_from_file
 )
 
 
-def render_rules_tab(rules_state):
+def render_rules_tab(rules_state, env_state):
     gr.Markdown("## Rules Editor")
 
     status = gr.Textbox(label="Status", interactive=False)
+
+    with gr.Accordion("Upload Rules Python File", open=False):
+        upload_rules = gr.File(
+            label="Upload Rules Python File",
+            file_types=[".py"],
+        )
 
     with gr.Row():
         selected_rule = gr.Dropdown(label="Selected rule", choices=[], interactive=True)
@@ -47,14 +54,16 @@ def render_rules_tab(rules_state):
         lines=18,
     )
 
+    upload_rules.change(
+        fn=load_rules_from_file,
+        inputs=[upload_rules, env_state],
+        outputs=[rules_state, selected_rule, rules_json, status],
+    )
+
     add_rule_btn.click(
         fn=add_rule,
-        inputs=[rules_state, rule_name, rule_body, use_env, type_strict],
+        inputs=[rules_state, rule_name, rule_body, use_env, type_strict, env_state],
         outputs=[selected_rule, rules_json, status],
-    ).then(
-        fn=clear_rule_fields,
-        inputs=[],
-        outputs=[rule_name, rule_body, use_env, type_strict],
     )
 
     load_rule_btn.click(
@@ -65,7 +74,7 @@ def render_rules_tab(rules_state):
 
     update_rule_btn.click(
         fn=update_rule,
-        inputs=[rules_state, selected_rule, rule_name, rule_body, use_env, type_strict],
+        inputs=[rules_state, selected_rule, rule_name, rule_body, use_env, type_strict, env_state],
         outputs=[selected_rule, rules_json, status],
     )
 

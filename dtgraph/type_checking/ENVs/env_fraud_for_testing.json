@@ -1,0 +1,61 @@
+{
+  "source": {
+    "id": "string",
+    "name": "string",
+    "email": "string",
+    "phoneNumber": "string",
+    "ssn": "string",
+    "amount": "float",
+    "fraud": "boolean",
+    "globalStep": "integer",
+    "step": "integer",
+    "ts": "integer"
+  },
+
+  "target": {
+    "id": "string",
+    "name": "string",
+    "name_camel_case": "string",
+    "email": "string",
+    "phone": "string",
+    "ssn": "string",
+
+    "all_amounts": "bag[float]",
+    "count": "integer",
+
+    "from_amount": "float",
+    "to_amount": "float",
+    "increasing": "boolean",
+
+    "amount": "float"
+  },
+
+  "variables": {
+    "emails": "set[string]",
+    "phones": "set[string]",
+    "ssns": "set[string]",
+    "amounts": "bag[float]"
+  },
+
+  "functions": {
+    "head": {
+      "inputs": ["bag[string]"],
+      "output": "string"
+    },
+
+    "apoc.text.upperCamelCase": {
+      "inputs": ["string"],
+      "output": "string"
+    },
+
+    "round": {
+      "inputs": ["float"],
+      "output": "float"
+    },
+
+    "size": {
+      "inputs": ["bag[float]"],
+      "output": "integer"
+    }
+  }
+}

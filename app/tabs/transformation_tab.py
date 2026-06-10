@@ -67,6 +67,19 @@ def run_transformation(
     log_buffer = io.StringIO()
 
     try:
+
+        if not uri.strip():
+            return None, "Neo4j URI is required."
+
+        if not database.strip():
+            return None, "Database name is required."
+
+        if not username.strip():
+            return None, "Username is required."
+
+        if not password.strip():
+            return None, "Password is required."
+        
         if not selected_rules:
             return None, "Please select at least one rule."
 

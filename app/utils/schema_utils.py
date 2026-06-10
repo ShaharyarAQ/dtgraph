@@ -56,6 +56,7 @@ def properties_to_text(props):
         return ""
     return "\n".join([f"{name}:{value.get('type', '')}" for name, value in props.items()])
 
+
 def refresh(schema):
     node_choices = list(schema["nodes"].keys())
     edge_choices = list(schema["edges"].keys())
@@ -76,9 +77,11 @@ def shape_choices(schema, selected_node):
         for i, shape in enumerate(schema["nodes"][selected_node])
     ]
 
+
 def update_schema_strict(schema, strict):
     schema["strict"] = strict
     return (*refresh(schema), f"Set schema strict = {strict}.")
+
 
 def update_shape_dropdown(schema, selected_node):
     choices = shape_choices(schema, selected_node)
@@ -94,6 +97,83 @@ def get_shape_index(selected_shape):
     except Exception:
         return None
 
+
+# -----------------------------
+# Environment validation helpers
+# -----------------------------
+
+def format_validation_errors(errors):
+    return "Schema validation failed:\n" + "\n".join(f"- {error}" for error in errors)
+
+
+def validate_properties_against_env(properties, env, env_section, context):
+    errors = []
+
+    if env is None:
+        errors.append("Environment is missing.")
+        return errors
+
+    if env_section not in ["source", "target"]:
+        errors.append(
+            f"Invalid environment section '{env_section}'. Expected 'source' or 'target'."
+        )
+        return errors
+
+    env_props = env.get(env_section, {})
+
+    for prop_name, prop_data in properties.items():
+        schema_type = prop_data.get("type")
+
+        if prop_name not in env_props:
+            errors.append(
+                f"{context}: property '{prop_name}' is not declared in env.{env_section}."
+            )
+            continue
+
+        env_type = env_props[prop_name]
+
+        if schema_type != env_type:
+            errors.append(
+                f"{context}: property '{prop_name}' has type '{schema_type}' in schema "
+                f"but '{env_type}' in env.{env_section}."
+            )
+
+    return errors
+
+
+def validate_schema_properties_against_env(
+    mandatory_properties,
+    optional_properties,
+    env,
+    env_section,
+    context,
+):
+    errors = []
+
+    errors.extend(
+        validate_properties_against_env(
+            mandatory_properties,
+            env,
+            env_section,
+            f"{context} mandatory properties",
+        )
+    )
+
+    errors.extend(
+        validate_properties_against_env(
+            optional_properties,
+            env,
+            env_section,
+            f"{context} optional properties",
+        )
+    )
+
+    return errors
+
+
+# -----------------------------
+# Node helpers
+# -----------------------------
 
 def add_node(schema, node_key):
     node_key = node_key.strip()
@@ -118,17 +198,49 @@ def delete_node(schema, selected_node):
     return (*refresh(schema), f"Deleted node '{selected_node}'.")
 
 
-def add_shape(schema, selected_node, labels, optional_labels, open_labels,
-              mandatory_properties, optional_properties, open_properties):
+# -----------------------------
+# Shape helpers
+# -----------------------------
+
+def add_shape(
+    schema,
+    selected_node,
+    labels,
+    optional_labels,
+    open_labels,
+    mandatory_properties,
+    optional_properties,
+    open_properties,
+    env,
+    env_section,
+):
     if not selected_node:
         return (*refresh(schema), update_shape_dropdown(schema, selected_node), "Select a node first.")
+
+    mandatory_props = parse_properties(mandatory_properties)
+    optional_props = parse_properties(optional_properties)
+
+    errors = validate_schema_properties_against_env(
+        mandatory_props,
+        optional_props,
+        env,
+        env_section,
+        f"Node '{selected_node}'",
+    )
+
+    if errors:
+        return (
+            *refresh(schema),
+            update_shape_dropdown(schema, selected_node),
+            format_validation_errors(errors),
+        )
 
     shape = {
         "labels": parse_csv(labels),
         "optional_labels": parse_csv(optional_labels),
         "open_labels": open_labels,
-        "mandatory_properties": parse_properties(mandatory_properties),
-        "optional_properties": parse_properties(optional_properties),
+        "mandatory_properties": mandatory_props,
+        "optional_properties": optional_props,
         "open_properties": open_properties,
     }
 
@@ -160,19 +272,48 @@ def load_shape(schema, selected_node, selected_shape):
     )
 
 
-def update_shape(schema, selected_node, selected_shape, labels, optional_labels,
-                 open_labels, mandatory_properties, optional_properties, open_properties):
+def update_shape(
+    schema,
+    selected_node,
+    selected_shape,
+    labels,
+    optional_labels,
+    open_labels,
+    mandatory_properties,
+    optional_properties,
+    open_properties,
+    env,
+    env_section,
+):
     idx = get_shape_index(selected_shape)
 
     if selected_node not in schema["nodes"] or idx is None:
         return (*refresh(schema), update_shape_dropdown(schema, selected_node), "Select a shape first.")
 
+    mandatory_props = parse_properties(mandatory_properties)
+    optional_props = parse_properties(optional_properties)
+
+    errors = validate_schema_properties_against_env(
+        mandatory_props,
+        optional_props,
+        env,
+        env_section,
+        f"Node '{selected_node}', shape {idx}",
+    )
+
+    if errors:
+        return (
+            *refresh(schema),
+            update_shape_dropdown(schema, selected_node),
+            format_validation_errors(errors),
+        )
+
     schema["nodes"][selected_node][idx] = {
         "labels": parse_csv(labels),
         "optional_labels": parse_csv(optional_labels),
         "open_labels": open_labels,
-        "mandatory_properties": parse_properties(mandatory_properties),
-        "optional_properties": parse_properties(optional_properties),
+        "mandatory_properties": mandatory_props,
+        "optional_properties": optional_props,
         "open_properties": open_properties,
     }
 
@@ -198,19 +339,46 @@ def delete_shape(schema, selected_node, selected_shape):
     )
 
 
-def add_edge(schema, edge_name, from_labels, to_labels, open_properties,
-             mandatory_properties, optional_properties):
+# -----------------------------
+# Edge helpers
+# -----------------------------
+
+def add_edge(
+    schema,
+    edge_name,
+    from_labels,
+    to_labels,
+    open_properties,
+    mandatory_properties,
+    optional_properties,
+    env,
+    env_section,
+):
     edge_name = edge_name.strip()
 
     if not edge_name:
         return (*refresh(schema), "Edge name is required.")
 
+    mandatory_props = parse_properties(mandatory_properties)
+    optional_props = parse_properties(optional_properties)
+
+    errors = validate_schema_properties_against_env(
+        mandatory_props,
+        optional_props,
+        env,
+        env_section,
+        f"Edge '{edge_name}'",
+    )
+
+    if errors:
+        return (*refresh(schema), format_validation_errors(errors))
+
     schema["edges"][edge_name] = {
         "from": parse_csv(from_labels),
         "to": parse_csv(to_labels),
         "open_properties": open_properties,
-        "mandatory_properties": parse_properties(mandatory_properties),
-        "optional_properties": parse_properties(optional_properties),
+        "mandatory_properties": mandatory_props,
+        "optional_properties": optional_props,
     }
 
     return (*refresh(schema), f"Added edge '{edge_name}'.")
@@ -233,8 +401,18 @@ def load_edge(schema, selected_edge):
     )
 
 
-def update_edge(schema, selected_edge, edge_name, from_labels, to_labels,
-                open_properties, mandatory_properties, optional_properties):
+def update_edge(
+    schema,
+    selected_edge,
+    edge_name,
+    from_labels,
+    to_labels,
+    open_properties,
+    mandatory_properties,
+    optional_properties,
+    env,
+    env_section,
+):
     if not selected_edge:
         return (*refresh(schema), "Select an edge first.")
 
@@ -243,14 +421,28 @@ def update_edge(schema, selected_edge, edge_name, from_labels, to_labels,
     if not new_edge_name:
         return (*refresh(schema), "Edge name is required.")
 
+    mandatory_props = parse_properties(mandatory_properties)
+    optional_props = parse_properties(optional_properties)
+
+    errors = validate_schema_properties_against_env(
+        mandatory_props,
+        optional_props,
+        env,
+        env_section,
+        f"Edge '{new_edge_name}'",
+    )
+
+    if errors:
+        return (*refresh(schema), format_validation_errors(errors))
+
     schema["edges"].pop(selected_edge, None)
 
     schema["edges"][new_edge_name] = {
         "from": parse_csv(from_labels),
         "to": parse_csv(to_labels),
         "open_properties": open_properties,
-        "mandatory_properties": parse_properties(mandatory_properties),
-        "optional_properties": parse_properties(optional_properties),
+        "mandatory_properties": mandatory_props,
+        "optional_properties": optional_props,
     }
 
     return (*refresh(schema), f"Updated edge '{new_edge_name}'.")
@@ -265,7 +457,35 @@ def delete_edge(schema, selected_edge):
     return (*refresh(schema), f"Deleted edge '{selected_edge}'.")
 
 
-def load_schema_from_file(file):
+# -----------------------------
+# Upload helper
+# -----------------------------
+
+
+def validate_schema_structure(schema):
+    errors = []
+
+    if not isinstance(schema, dict):
+        return ["Schema JSON must be an object."]
+
+    if "nodes" not in schema:
+        errors.append("Missing 'nodes'.")
+
+    if "edges" not in schema:
+        errors.append("Missing 'edges'.")
+
+    if "nodes" in schema and not isinstance(schema["nodes"], dict):
+        errors.append("'nodes' must be an object.")
+
+    if "edges" in schema and not isinstance(schema["edges"], dict):
+        errors.append("'edges' must be an object.")
+
+    if "strict" in schema and not isinstance(schema["strict"], bool):
+        errors.append("'strict' must be true or false.")
+
+    return errors
+
+def load_schema_from_file(file, env, env_section):
     if file is None:
         schema = empty_schema()
 
@@ -279,9 +499,34 @@ def load_schema_from_file(file):
         with open(file.name, "r", encoding="utf-8") as f:
             schema = json.load(f)
 
+        structure_errors = validate_schema_structure(schema)
+
+        if structure_errors:
+            empty = empty_schema()
+
+            return (
+                empty,
+                *refresh(empty),
+                "Invalid schema JSON:\n"
+                + "\n".join(f"- {error}" for error in structure_errors)
+            )
+
         schema.setdefault("strict", True)
-        schema.setdefault("nodes", {})
-        schema.setdefault("edges", {})
+
+        errors = validate_full_schema_against_env(
+            schema,
+            env,
+            env_section,
+        )
+
+        if errors:
+            empty = empty_schema()
+
+            return (
+                empty,
+                *refresh(empty),
+                format_validation_errors(errors),
+            )
 
         return (
             schema,
@@ -297,3 +542,32 @@ def load_schema_from_file(file):
             *refresh(schema),
             f"Failed to load schema:\n{str(e)}"
         )
+    
+
+def validate_full_schema_against_env(schema, env, env_section):
+    errors = []
+
+    for node_key, shapes in schema.get("nodes", {}).items():
+        for shape_index, shape in enumerate(shapes):
+            errors.extend(
+                validate_schema_properties_against_env(
+                    shape.get("mandatory_properties", {}),
+                    shape.get("optional_properties", {}),
+                    env,
+                    env_section,
+                    f"Node '{node_key}', shape {shape_index + 1}",
+                )
+            )
+
+    for edge_name, edge_data in schema.get("edges", {}).items():
+        errors.extend(
+            validate_schema_properties_against_env(
+                edge_data.get("mandatory_properties", {}),
+                edge_data.get("optional_properties", {}),
+                env,
+                env_section,
+                f"Edge '{edge_name}'",
+            )
+        )
+
+    return errors

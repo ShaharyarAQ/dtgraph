@@ -1,6 +1,5 @@
 import json
 import tempfile
-import traceback
 import gradio as gr
 
 import io
@@ -26,9 +25,15 @@ def build_env_object(env_state):
     return Environment(env_path)
 
 
-def build_schema_object(schema_state):
+def build_schema_object(schema_state, env_state, section="target"):
     schema_path = write_temp_json(schema_state)
-    return SchemaLoader(schema_path)
+    env_obj = build_env_object(env_state)
+
+    return SchemaLoader(
+        schema_path,
+        env=env_obj,
+        section=section,
+    )
 
 
 def build_selected_rules(rules_state, selected_rules, env_state):
@@ -56,28 +61,6 @@ def build_selected_rules(rules_state, selected_rules, env_state):
     return rule_objects
 
 
-# def run_schema_conformance(rules_state, selected_rules, target_schema_state, env_state):
-#     try:
-#         if not selected_rules:
-#             return "Please select at least one rule."
-
-#         schema_obj = build_schema_object(target_schema_state)
-#         rule_objects = build_selected_rules(rules_state, selected_rules, env_state)
-
-#         if not rule_objects:
-#             return "No valid rules were created."
-
-#         result = check_schema(
-#             rule_objects,
-#             schema_obj,
-#         )
-
-#         return f"Schema conformance completed successfully.\n\nResult:\n{result}"
-
-#     except Exception:
-#         return traceback.format_exc()
-
-
 def run_schema_conformance(rules_state, selected_rules, target_schema_state, env_state):
     log_buffer = io.StringIO()
 
@@ -85,7 +68,11 @@ def run_schema_conformance(rules_state, selected_rules, target_schema_state, env
         if not selected_rules:
             return "Please select at least one rule."
 
-        schema_obj = build_schema_object(target_schema_state)
+        schema_obj = build_schema_object(
+            target_schema_state,
+            env_state,
+            section="target",
+        )
         rule_objects = build_selected_rules(rules_state, selected_rules, env_state)
 
         if not rule_objects:

@@ -22,7 +22,7 @@ from utils.schema_utils import (
 )
 
 
-def render_schema_tab(title, schema_state):
+def render_schema_tab(title, schema_state, env_state, env_section):
     gr.Markdown(f"## {title}")
 
     status = gr.Textbox(label="Status", interactive=False)
@@ -123,7 +123,11 @@ def render_schema_tab(title, schema_state):
 
     upload_schema.change(
         fn=load_schema_from_file,
-        inputs=[upload_schema],
+        inputs=[
+            upload_schema,
+            env_state,
+            gr.State(env_section),
+        ],
         outputs=[
             schema_state,
             selected_node,
@@ -180,6 +184,8 @@ def render_schema_tab(title, schema_state):
             shape_mandatory_properties,
             shape_optional_properties,
             shape_open_properties,
+            env_state,
+            gr.State(env_section)
         ],
         outputs=[selected_node, selected_edge, schema_json, selected_shape, status],
     ).then(
@@ -221,6 +227,8 @@ def render_schema_tab(title, schema_state):
             shape_mandatory_properties,
             shape_optional_properties,
             shape_open_properties,
+            env_state,
+            gr.State(env_section)
         ],
         outputs=[selected_node, selected_edge, schema_json, selected_shape, status],
     )
@@ -252,6 +260,8 @@ def render_schema_tab(title, schema_state):
             edge_open_properties,
             edge_mandatory_properties,
             edge_optional_properties,
+            env_state,
+            gr.State(env_section)
         ],
         outputs=[selected_node, selected_edge, schema_json, status],
     ).then(
@@ -292,6 +302,8 @@ def render_schema_tab(title, schema_state):
             edge_open_properties,
             edge_mandatory_properties,
             edge_optional_properties,
+            env_state,
+            gr.State(env_section)
         ],
         outputs=[selected_node, selected_edge, schema_json, status],
     )

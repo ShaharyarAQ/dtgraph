@@ -65,8 +65,8 @@ class SemanticAnalyzer:
                     ## Translate to cypher
                     prop["value"] = to_cypher(ast)
 
-                    print("AST:")
-                    print_ast(ast)
+                    # print("AST:")
+                    # print_ast(ast)
 
                     # Type check
                     if key not in self.env.target:
