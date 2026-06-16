@@ -1,5 +1,7 @@
 import re
 
+from dtgraph.type_checking.LHS_functions_validation_helpers import extract_function_calls_from_lhs, extract_lhs_function_assignments
+
 from .expression_parser import parser, ASTTransformer
 from .ast_nodes import (
     BooleanLiteral,
@@ -37,6 +39,9 @@ class SemanticAnalyzer:
         self.env = env
 
     def analyze(self, rule_dict):
+
+        self.analyze_lhs_functions(rule_dict["lhs"])
+        self.analyze_lhs_function_assignments(rule_dict["lhs"])
 
         for c in rule_dict.get("constructors", []):
 
@@ -92,6 +97,37 @@ class SemanticAnalyzer:
                             f"Type mismatch for '{key}': expected {format_types(expected_types)}, got {format_types(actual)}"
                         )
 
+    ## LHS functions validation     
+    def analyze_lhs_functions(self, lhs: str):
+        calls = extract_function_calls_from_lhs(lhs, self.env.functions.keys())
+
+        for call in calls:
+            ast = parse_expression(call)
+            self.infer_type(ast)
+
+    def analyze_lhs_function_assignments(self, lhs: str):
+        assignments = extract_lhs_function_assignments(lhs)
+
+        for expr, var_name in assignments:
+            ast = parse_expression(expr)
+            actual_types = self.infer_type(ast)
+
+            if var_name not in self.env.variables:
+                raise Exception(f"Unknown LHS variable '{var_name}'")
+
+            expected = self.env.variables[var_name]
+            expected_types = expected if isinstance(expected, list) else [expected]
+
+            if not any(
+                is_compatible(actual, expected)
+                for actual in actual_types
+                for expected in expected_types
+            ):
+                raise Exception(
+                    f"Type mismatch for LHS variable '{var_name}': "
+                    f"expected {expected_types}, got {actual_types}"
+                )
+
     # Type inference
     def infer_type(self, node):
 
@@ -111,23 +147,42 @@ class SemanticAnalyzer:
 
             func = self.env.functions[node.name]
 
-            if len(node.args) != len(func["inputs"]):
+            inputs = func.get("inputs", [])
+            outputs = func.get("outputs", [])
+
+            if not isinstance(inputs, list):
+                inputs = [inputs]
+
+            if not isinstance(outputs, list):
+                outputs = [outputs]
+
+            if len(inputs) != len(outputs):
                 raise Exception(
-                    f"Function '{node.name}' expects {len(func['inputs'])} arguments"
+                    f"Invalid function declaration for '{node.name}': "
+                    f"'inputs' and 'outputs' must have the same length"
                 )
 
-            for arg, expected in zip(node.args, func["inputs"]):
-                actual = self.infer_type(arg)
+            if len(node.args) != 1:
+                raise Exception(
+                    f"Function '{node.name}' currently supports exactly 1 argument"
+                )
 
-                expected_types = expected if isinstance(expected, list) else [expected]
+            arg_types = self.infer_type(node.args[0])
 
-                if not any(is_compatible(a, e) for a in actual for e in expected_types):
-                    raise Exception(
-                        f"Function '{node.name}' expected {expected_types}, got {actual}"
-                    )
+            result_types = []
 
-            out = func["output"]
-            return out if isinstance(out, list) else [out]
+            for expected_input, output_type in zip(inputs, outputs):
+                for actual in arg_types:
+                    if is_compatible(actual, expected_input):
+                        result_types.append(output_type)
+
+            if not result_types:
+                raise Exception(
+                    f"Function '{node.name}' does not support input type {arg_types}. "
+                    f"Expected one of {inputs}"
+                )
+
+            return list(set(result_types))
 
         #### New blocks for expressions
 

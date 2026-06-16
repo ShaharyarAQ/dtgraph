@@ -38,24 +38,28 @@
   },
 
   "functions": {
+    "collect": {
+      "inputs": ["string", "float"],
+      "outputs": ["bag[string]", "bag[float]"]
+    },
     "head": {
       "inputs": ["bag[string]"],
-      "output": "string"
+      "outputs": ["string"]
     },
 
     "apoc.text.upperCamelCase": {
       "inputs": ["string"],
-      "output": "string"
+      "outputs": ["string"]
     },
 
     "round": {
       "inputs": ["float"],
-      "output": "float"
+      "outputs": ["float"]
     },
 
     "size": {
       "inputs": ["bag[float]"],
-      "output": "integer"
+      "outputs": ["integer"]
     }
   }
 }

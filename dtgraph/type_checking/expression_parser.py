@@ -36,7 +36,10 @@ dotted_name: NAME ("." NAME)*
      | NAME                     -> variable
      | "[" list_items? "]"      -> list_expr
 
-?args: expr ("," expr)*
+?args: distinct_expr ("," distinct_expr)*
+
+?distinct_expr: "DISTINCT" expr -> distinct_arg
+              | expr
 
 list_items: expr ("," expr)*
 
@@ -153,3 +156,6 @@ class ASTTransformer(Transformer):
     
     def variable(self, items):
         return Variable(str(items[0]))
+    
+    def distinct_arg(self, items):
+        return items[0]
