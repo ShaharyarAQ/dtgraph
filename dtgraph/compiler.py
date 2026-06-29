@@ -216,19 +216,61 @@ class Compiler:
 
         return "scalar", type_str
 
+
+
+    def _scalar_conflict_detection(self, alias: str, key: str, value: str) -> str:
+        original_prop = f"{alias}.{key}"
+        conflict_prop = f"{alias}.`{key}.conflict`"
+
+        value_is_list = value.startswith("[") and value.endswith("]")
+
+        value_as_bag = (
+            value
+            if value_is_list
+            else "CASE WHEN " + value + " IS NULL THEN [] ELSE [" + value + "] END"
+        )
+
+        old_value_as_bag = (
+            "CASE WHEN " + original_prop + " IS NULL "
+            "OR " + original_prop + ' = "Conflict Detected!" '
+            "THEN [] ELSE "
+            + (original_prop if value_is_list else "[" + original_prop + "]")
+            + " END"
+        )
+
+        return (
+            conflict_prop + " = \n        CASE\n"
+            "            WHEN " + original_prop + ' = "Conflict Detected!" THEN\n'
+            "                coalesce(" + conflict_prop + ", []) + " + value_as_bag + "\n"
+            "            WHEN " + original_prop + " IS NOT NULL AND " + original_prop + " <> " + value + " THEN\n"
+            "                coalesce(" + conflict_prop + ", []) + " + old_value_as_bag + " + " + value_as_bag + "\n"
+            "            ELSE\n"
+            "                " + conflict_prop + "\n"
+            "        END,\n"
+            "        " + original_prop + " = \n        CASE\n"
+            "            WHEN " + original_prop + " IS NOT NULL AND " + original_prop + " <> " + value + " THEN\n"
+            '                "Conflict Detected!"\n'
+            "            ELSE\n"
+            "                " + value + "\n"
+            "        END"
+        )
+
     def _conflict_detection(self, alias: str, p: dict[str, str]) -> str:
 
         value = p["value"].strip()
         key = p["key"]
 
         # Default DTGraph behavior
+        # if not self._type_strict or not self._env:
+        #     return (
+        #         alias + "." + key + " = \n        CASE\n            WHEN "
+        #         + alias + "." + key + " <> " + value
+        #         + ' THEN\n                "Conflict Detected!"\n            ELSE\n                '
+        #         + value + "\n        END"
+        #     )
+
         if not self._type_strict or not self._env:
-            return (
-                alias + "." + key + " = \n        CASE\n            WHEN "
-                + alias + "." + key + " <> " + value
-                + ' THEN\n                "Conflict Detected!"\n            ELSE\n                '
-                + value + "\n        END"
-            )
+            return self._scalar_conflict_detection(alias, key, value)
 
         # Type strict mode
         type_str = self._env.target.get(key)
@@ -317,12 +359,14 @@ class Compiler:
             )
 
         # SCALAR → always conflict (NO merge)
-        return (
-            alias + "." + key + " = \n        CASE\n            WHEN "
-            + alias + "." + key + " <> " + value
-            + ' THEN\n                "Conflict Detected!"\n            ELSE\n                '
-            + value + "\n        END"
-        )
+        # return (
+        #     alias + "." + key + " = \n        CASE\n            WHEN "
+        #     + alias + "." + key + " <> " + value
+        #     + ' THEN\n                "Conflict Detected!"\n            ELSE\n                '
+        #     + value + "\n        END"
+        # )
+
+        return self._scalar_conflict_detection(alias, key, value)
 
 if __name__ == "__main__":
     from dtgraph import Rule

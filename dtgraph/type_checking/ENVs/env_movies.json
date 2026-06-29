@@ -17,35 +17,47 @@
     "movie": "string",
     "movies": "bag[string]",
     "uniqueMovies": "set[string]",
-    "CommonMovies": "bag[string]",
+    "CommonMovies": "string",
     "experienced": "boolean",
     "years": "bag[integer]",
     "releaseDate": "string"
   },
   "variables": {
-    "emails": "set[string]",
-    "phones": "bag[string]",
-    "ssns": "bag[string]",
-    "amounts": "bag[float]"
+    "x": "node",
+    "z": "node"
   },
   "functions": {
+    "id": {
+      "inputs": [
+        "node"
+      ],
+      "outputs": [
+        "integer"
+      ]
+    },
     "toString": {
       "inputs": [
         "integer"
       ],
-      "output": "string"
+      "outputs": [
+        "string"
+      ]
     },
     "upper": {
       "inputs": [
         "string"
       ],
-      "output": "string"
+      "outputs": [
+        "string"
+      ]
     },
     "apoc.text.upperCamelCase": {
       "inputs": [
         "string"
       ],
-      "output": "string"
+      "outputs": [
+        "string"
+      ]
     }
   }
 }

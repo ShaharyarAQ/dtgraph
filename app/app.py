@@ -10,8 +10,12 @@ sys.path.insert(0, str(DTGRAPH_DIR))
 
 import gradio as gr
 
+from tabs.guide_tab import render_guide_tab
+
 from tabs.schema_tab import render_schema_tab
 from utils.schema_utils import empty_schema
+
+from tabs.schema_visualizer_tab import render_schema_visualizer_tab
 
 from tabs.environment_tab import render_environment_tab
 from utils.environment_utils import empty_env
@@ -36,6 +40,9 @@ with gr.Blocks(title="DTGraph") as app:
 
     gr.Markdown("# DTGraph")
 
+    with gr.Tab("Guide"):
+        render_guide_tab()
+
     with gr.Tab("Environment"):
         render_environment_tab(env_state)
 
@@ -53,6 +60,12 @@ with gr.Blocks(title="DTGraph") as app:
             schema_state=target_schema_state,
             env_state=env_state,
             env_section="target",
+        )
+
+    with gr.Tab("Schema Visualizer"):
+        render_schema_visualizer_tab(
+            source_schema_state,
+            target_schema_state,
         )
 
     with gr.Tab("Rules"):
