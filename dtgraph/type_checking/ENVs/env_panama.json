@@ -10,7 +10,7 @@
     "valid_until": "string"
   },
   "target": {
-    "ccode": "bag[string]",
+    "ccode": "set[string]",
     "cname": "bag[string]",
     "name": "string",
     "valid": "string",
@@ -28,25 +28,25 @@
       "inputs": [
         "bag[string]"
       ],
-      "output": "string"
+      "outputs": ["string"]
     },
     "toInteger": {
       "inputs": [
         "string"
       ],
-      "output": "integer"
+      "outputs": ["integer"]
     },
     "upper": {
       "inputs": [
         "string"
       ],
-      "output": "string"
+      "outputs": ["string"]
     },
     "apoc.text.upperCamelCase": {
       "inputs": [
         "string"
       ],
-      "output": "string"
+      "outputs": ["string"]
     }
   }
 }

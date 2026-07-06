@@ -227,15 +227,22 @@ class Compiler:
         value_as_bag = (
             value
             if value_is_list
-            else "CASE WHEN " + value + " IS NULL THEN [] ELSE [" + value + "] END"
+            else (
+                "CASE\n"
+                "            WHEN " + value + " IS NULL THEN []\n"
+                "            WHEN valueType(" + value + ") STARTS WITH 'LIST' THEN " + value + "\n"
+                "            ELSE [" + value + "]\n"
+                "        END"
+            )
         )
 
         old_value_as_bag = (
-            "CASE WHEN " + original_prop + " IS NULL "
-            "OR " + original_prop + ' = "Conflict Detected!" '
-            "THEN [] ELSE "
-            + (original_prop if value_is_list else "[" + original_prop + "]")
-            + " END"
+            "CASE\n"
+            "            WHEN " + original_prop + " IS NULL "
+            "OR " + original_prop + ' = "Conflict Detected!" THEN []\n'
+            "            WHEN valueType(" + original_prop + ") STARTS WITH 'LIST' THEN " + original_prop + "\n"
+            "            ELSE [" + original_prop + "]\n"
+            "        END"
         )
 
         return (
