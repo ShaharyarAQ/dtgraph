@@ -1,0 +1,325 @@
+{
+  "strict": true,
+
+  "nodes": {
+    "Entity": [
+      {
+        "labels": ["Entity"],
+        "optional_labels": ["StruckOff"],
+        "open_labels": false,
+        "mandatory_properties": {
+          "lastEditTimestamp": { "type": "string" },
+          "sourceID": { "type": "string" }
+        },
+        "optional_properties": {
+          "address": { "type": "string" },
+          "closed_date": { "type": "date" },
+          "comments": { "type": "string" },
+          "company_number": { "type": "string" },
+          "company_type": { "type": "string" },
+          "countries": { "type": "set[string]" },
+          "country_codes": { "type": "set[string]" },
+          "dorm_date": { "type": "date" },
+          "entity_number": { "type": "string" },
+          "former_name": { "type": "string" },
+          "ibcRUC": { "type": "string" },
+          "inactivation_date": { "type": "date" },
+          "incorporation_date": { "type": "date" },
+          "internal_id": { "type": "string" },
+          "jurisdiction": { "type": "string" },
+          "jurisdiction_description": { "type": "string" },
+          "name": { "type": "string" },
+          "note": { "type": "string" },
+          "original_name": { "type": "string" },
+          "registration_date": { "type": "date" },
+          "service_provider": { "type": "string" },
+          "status": { "type": "string" },
+          "struck_off_date": { "type": "date" },
+          "tax_stat_description": { "type": "string" },
+          "type": { "type": "string" },
+          "valid_until": { "type": "string" }
+          
+        },
+        "open_properties": false
+      }
+    ],
+
+    "Officer": [
+      {
+        "labels": ["Officer"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "lastEditTimestamp": { "type": "string" },
+          "sourceID": { "type": "string" }
+        },
+        "optional_properties": {
+          "address": { "type": "string" },
+          "countries": { "type": "set[string]" },
+          "country_codes": { "type": "set[string]" },
+          "end_date": { "type": "date" },
+          "name": { "type": "string" },
+          "note": { "type": "string" },
+          "status": { "type": "string" },
+          "valid_until": { "type": "string" }
+        },
+        "open_properties": false
+      }
+    ],
+
+    "Address": [
+      {
+        "labels": ["Address"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "sourceID": { "type": "string" }
+        },
+        "optional_properties": {
+          "address": { "type": "string" },
+          "countries": { "type": "set[string]" },
+          "country": { "type": "string" },
+          "country_code": { "type": "string" },
+          "country_codes": { "type": "set[string]" },
+          "lastEditTimestamp": { "type": "string" },
+          "name": { "type": "string" },
+          "note": { "type": "string" },
+          "original_address": { "type": "string" },
+          "status": { "type": "string" },
+          "valid_until": { "type": "string" }
+        },
+        "open_properties": false
+      }
+    ],
+
+    "Intermediary": [
+      {
+        "labels": ["Intermediary"],
+        "optional_labels": ["Officer"],
+        "open_labels": false,
+         "mandatory_properties": {
+          "lastEditTimestamp": { "type": "string" },
+          "sourceID": { "type": "string" },
+          "valid_until": { "type": "string" }
+        },
+        "optional_properties": {
+          "address": { "type": "string" },
+          "countries": { "type": "set[string]" },
+          "country_codes": { "type": "set[string]" },
+          "internal_id": { "type": "string" },
+          "name": { "type": "string" },
+          "note": { "type": "string" },
+          "registered_office": { "type": "string" },
+          "status": { "type": "string" }
+        },
+        "open_properties": false
+      }
+    ],
+
+    "Other": [
+      {
+        "labels": ["Other"],
+        "optional_labels": ["StruckOff"],
+        "open_labels": false,
+        "mandatory_properties": {
+          "lastEditTimestamp": { "type": "string" },
+          "name": { "type": "string" },
+          "sourceID": { "type": "string" },
+          "valid_until": { "type": "string" }
+        },
+        "optional_properties": {
+          "closed_date": { "type": "date" },
+          "countries": { "type": "set[string]" },
+          "country_codes": { "type": "set[string]" },
+          "incorporation_date": { "type": "date" },
+          "internal_id": { "type": "string" },
+          "jurisdiction": { "type": "string" },
+          "jurisdiction_description": { "type": "string" },
+          "note": { "type": "string" },
+          "struck_off_date": { "type": "date" },
+          "type": { "type": "string" } 
+        },
+        "open_properties": false
+      }
+    ]
+  },
+
+  "edges": {
+    "connected_to": {
+      "from": ["Officer", "Other", "Intermediary", "StruckOff"],
+      "to": ["Entity", "StruckOff"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" },
+        "sourceID": { "type": "string" },
+        "valid_until": { "type": "string" }
+      },
+      "optional_properties": {}
+    },
+
+    "intermediary_of": {
+      "from": ["Intermediary", "Officer"],
+      "to": ["Entity", "StruckOff"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" }
+      },
+      "optional_properties": {
+        "end_date": { "type": "date" },
+        "lastEditTimestamp": { "type": "string" },
+        "sourceID": { "type": "string" },
+        "start_date": { "type": "date" },
+        "valid_until": { "type": "string" }
+      }
+    },
+
+    "officer_of": {
+      "from": ["Officer", "Intermediary", "Entity"],
+      "to": ["Entity", "StruckOff", "Intermediary", "Officer", "Other"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {
+        "end_date": { "type": "date" },
+        "lastEditTimestamp": { "type": "string" },
+        "link": { "type": "string" },
+        "sourceID": { "type": "string" },
+        "start_date": { "type": "date" },
+        "status": { "type": "string" },
+        "valid_until": { "type": "string" }
+      }
+    },
+
+    "probably_same_officer_as": {
+      "from": ["Officer"],
+      "to": ["Officer"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" },
+        "sourceID": { "type": "string" },
+        "valid_until": { "type": "string" }
+      },
+      "optional_properties": {}
+    },
+
+    "registered_address": {
+      "from": ["Entity", "StruckOff", "Officer", "Intermediary", "Other" ],
+      "to": ["Address", "Entity"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {
+        "lastEditTimestamp": { "type": "string" },
+        "link": { "type": "string" },
+        "sourceID": { "type": "string" },
+        "valid_until": { "type": "string" }
+      }
+    },
+
+    "same_address_as": {
+      "from": ["Address"],
+      "to": ["Address"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" },
+        "sourceID": { "type": "string" },
+        "valid_until": { "type": "string" }
+      },
+      "optional_properties": {}
+    },
+
+    "same_as": {
+      "from": ["Entity", "StruckOff", "Address", "Intermediary" ],
+      "to": ["Entity", "StruckOff", "Address", "Officer"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" }
+      },
+      "optional_properties": {}
+    },
+
+    "same_company_as": {
+      "from": ["Entity", "StruckOff"],
+      "to": ["Entity", "StruckOff"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" },
+        "sourceID": { "type": "string" },
+        "valid_until": { "type": "string" }
+      },
+      "optional_properties": {}
+    },
+
+    "same_id_as": {
+      "from": ["Officer"],
+      "to": ["Officer"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" },
+        "sourceID": { "type": "string" },
+        "valid_until": { "type": "string" }
+      },
+      "optional_properties": {}
+    },
+
+    "same_intermediary_as": {
+      "from": ["Intermediary"],
+      "to": ["Intermediary"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" },
+        "sourceID": { "type": "string" },
+        "valid_until": { "type": "string" }
+      },
+      "optional_properties": {}
+    },
+
+    "same_name_as": {
+      "from": ["Entity", "StruckOff", "Officer", "Intermediary", "Other"],
+      "to": ["Entity", "StruckOff", "Officer", "Intermediary", "Other"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" }
+      },
+      "optional_properties": {
+        "lastEditTimestamp": { "type": "string" },
+        "sourceID": { "type": "string" },
+        "valid_until": { "type": "string" }
+      }
+    },
+
+    "similar": {
+      "from": ["Officer", "Intermediary"],
+      "to": ["Officer", "Intermediary"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" }
+      },
+      "optional_properties": {}
+    },
+
+    "similar_company_as": {
+      "from": ["Entity", "StruckOff"],
+      "to": ["Entity", "StruckOff"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" },
+        "sourceID": { "type": "string" },
+        "valid_until": { "type": "string" }
+      },
+      "optional_properties": {}
+    },
+
+    "underlying": {
+      "from": ["Officer", "Intermediary", "Other"],
+      "to": ["Officer", "Intermediary", "Entity"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" }
+      },
+      "optional_properties": {
+        "lastEditTimestamp": { "type": "string" },
+        "sourceID": { "type": "string" },
+        "valid_until": { "type": "string" }
+      }
+    }
+  }
+}

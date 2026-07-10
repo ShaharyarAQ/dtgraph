@@ -1,0 +1,55 @@
+{
+  "source": {
+    "lastEditTimestamp": "string",
+    "sourceID": "string",
+    "address": "string",
+    "closed_date": "date",
+    "comments": "string",
+    "company_number": "string",
+    "company_type": "string",
+    "countries": "set[string]",
+    "country": "string",
+    "country_code": "string",
+    "country_codes": "set[string]",
+    "dorm_date": "date",
+    "entity_number": "string",
+    "former_name": "string",
+    "ibcRUC": "string",
+    "inactivation_date": "date",
+    "incorporation_date": "date",
+    "internal_id": "string",
+    "jurisdiction": "string",
+    "jurisdiction_description": "string",
+    "name": "string",
+    "note": "string",
+    "original_address": "string",
+    "original_name": "string",
+    "registered_office": "string",
+    "registration_date": "date",
+    "service_provider": "string",
+    "status": "string",
+    "struck_off_date": "date",
+    "tax_stat_description": "string",
+    "type": "string",
+    "valid_until": "string",
+    "end_date": "date",
+    "link": "string",
+    "start_date": "date"
+  },
+
+  "target": {
+    "name": "string",
+    "address": "string",
+    "status": "string",
+    "country_codes": "set[string]",
+    "incorporation_date": "date",
+    "inactivation_date": "date",
+    "sourceID": "string",
+    "link": "string",
+    "start_date": "date"
+  },
+
+  "variables": {},
+
+  "functions": {}
+}

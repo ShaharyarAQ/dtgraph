@@ -1,0 +1,144 @@
+{
+  "strict": true,
+
+  "nodes": {
+    "ActiveEntity": [
+      {
+        "labels": ["ActiveEntity"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "name": { "type": "string" }
+        },
+        "optional_properties": {
+          "country_codes": { "type": "set[string]" },
+          "incorporation_date": { "type": "date" },
+          "sourceID": { "type": "string" }
+        },
+        "open_properties": false
+      }
+    ],
+
+    "InactiveEntity": [
+      {
+        "labels": ["InactiveEntity"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "name": { "type": "string" }
+        },
+        "optional_properties": {
+          "country_codes": { "type": "set[string]" },
+          "incorporation_date": { "type": "date" },
+          "inactivation_date": { "type": "date" },
+          "sourceID": { "type": "string" }
+        },
+        "open_properties": false
+      }
+    ],
+
+    "RegisteredAddress": [
+      {
+        "labels": ["RegisteredAddress"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "address": { "type": "string" }
+        },
+        "optional_properties": {
+          "country_codes": { "type": "set[string]" },
+          "name": { "type": "string" }
+        },
+        "open_properties": false
+      }
+    ],
+
+    "OfficerProfile": [
+      {
+        "labels": ["OfficerProfile"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "name": { "type": "string" }
+        },
+        "optional_properties": {
+          "sourceID": { "type": "string" }
+        },
+        "open_properties": false
+      }
+    ],
+
+    "IntermediaryProfile": [
+      {
+        "labels": ["IntermediaryProfile"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "address": { "type": "string" }
+        },
+        "optional_properties": {
+          "name": { "type": "string" },
+          "status": { "type": "string" },
+          "country_codes": { "type": "set[string]" }
+        },
+        "open_properties": false
+      }
+    ],
+
+    "ServiceProvider": [
+      {
+        "labels": ["ServiceProvider"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "name": { "type": "string" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ]
+  },
+
+  "edges": {
+    "REGISTERED_AT": {
+      "from": ["ActiveEntity", "InactiveEntity"],
+      "to": ["RegisteredAddress"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" }
+      },
+      "optional_properties": {}
+    },
+
+    "OFFICER_OF": {
+      "from": ["OfficerProfile"],
+      "to": ["ActiveEntity", "InactiveEntity"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" }
+      },
+      "optional_properties": {
+        "start_date": { "type": "date" },
+        "sourceID": { "type": "string" }
+      }
+    },
+
+    "INTERMEDIARY_OF": {
+      "from": ["IntermediaryProfile"],
+      "to": ["ActiveEntity", "InactiveEntity"],
+      "open_properties": false,
+      "mandatory_properties": {
+        "link": { "type": "string" }
+      },
+      "optional_properties": {}
+    },
+
+    "MANAGED_BY": {
+      "from": ["ActiveEntity", "InactiveEntity"],
+      "to": ["ServiceProvider"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    }
+  }
+}
