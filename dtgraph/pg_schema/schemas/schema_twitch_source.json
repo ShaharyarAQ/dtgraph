@@ -1,0 +1,117 @@
+{
+  "strict": true,
+  "nodes": {
+    "User": [
+      {
+        "labels": ["User"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "name": { "type": "string" } 
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+    "Stream": [
+      {
+        "labels": ["User", "Stream"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "name": { "type": "string" },
+          "id": { "type": "string" },
+          "createdAt": { "type": "date" },
+          "description": { "type": "string" },
+          "followers": { "type": "integer" },
+          "total_view_count": { "type": "integer"},
+          "url": { "type": "string" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+    "Team": [
+      {
+        "labels": ["Team"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "createdAt": { "type": "date" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+    "Game": [
+      {
+        "labels": ["Game"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "name": { "type": "string" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+    "Language": [
+      {
+        "labels": ["Language"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "name": {"type": "string" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ]
+  },
+  "edges": {
+    "CHATTER": {
+      "from": ["User", "Stream"],
+      "to": ["User", "Stream"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+    "MODERATOR": {
+      "from": ["User", "Stream"],
+      "to": ["User", "Stream"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+    "VIP": {
+      "from": ["User", "Stream"],
+      "to": ["User", "Stream"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+    "HAS_LANGUAGE": {
+      "from": ["User", "Stream"],
+      "to": ["Language"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+    "HAS_TEAM": {
+      "from": ["User", "Stream"],
+      "to": ["Team"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+    "PLAYS": {
+      "from": ["User", "Stream"],
+      "to": ["Game"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "source": {
+    "name": "string",
+    "id": "string",
+    "createdAt": "date",
+    "description": "string",
+    "followers": "integer",
+    "total_view_count": "integer",
+    "url": "string"
+  },
+
+  "target": {
+    "name": "string",
+    "followers": "integer",
+    "total_views": "integer",
+    "languages": "bag[string]",
+    "teams": "bag[string]",
+    "games": "bag[string]",
+    "team_id": "integer",
+    "created_at": "date",
+    "players": "bag[string]",
+    "player_count": "integer"
+  },
+
+  "variables": {
+    "languages": "bag[string]",
+    "teams": "bag[string]",
+    "games": "bag[string]",
+    "players": "bag[string]",
+    "player_count": "integer"
+  },
+
+  "functions": {
+    "collect": {
+      "inputs": ["string"],
+      "outputs": ["bag[string]"]
+    },
+    "size": {
+      "inputs": ["bag[string]"],
+      "outputs": ["integer"]
+    },
+    "toInteger": {
+      "inputs": ["string"],
+      "outputs": ["integer"]
+    }
+  }
+}

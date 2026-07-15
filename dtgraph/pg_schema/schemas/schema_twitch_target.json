@@ -1,0 +1,87 @@
+{
+  "strict": true,
+
+  "nodes": {
+    "Member": [
+      {
+        "labels": ["Member"],
+        "optional_labels": ["Chatter", "VIP", "Moderator"],
+        "open_labels": false,
+        "mandatory_properties": {
+          "name": { "type": "string" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "Gamer": [
+      {
+        "labels": ["Gamer"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "name": { "type": "string" },
+          "followers": { "type": "integer" },
+          "total_views": { "type": "integer" }
+        },
+        "optional_properties": {
+          "languages": { "type": "bag[string]" },
+          "teams": { "type": "bag[string]" },
+          "games": { "type": "bag[string]" }
+        },
+        "open_properties": false
+      }
+    ],
+
+    "TransformedTeam": [
+      {
+        "labels": ["TransformedTeam"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "team_id": { "type": "integer" },
+          "name": { "type": "string" },
+          "created_at": { "type": "date" },
+          "players": { "type": "bag[string]" },
+          "player_count": { "type": "integer" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ],
+
+    "TransformedGame": [
+      {
+        "labels": ["TransformedGame"],
+        "optional_labels": [],
+        "open_labels": false,
+        "mandatory_properties": {
+          "name": { "type": "string" },
+          "players": { "type": "bag[string]" },
+          "player_count": { "type": "integer" }
+        },
+        "optional_properties": {},
+        "open_properties": false
+      }
+    ]
+  },
+
+  "edges": {
+    "MEMBER_OF": {
+      "from": ["Gamer"],
+      "to": ["TransformedTeam"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    },
+
+    "PLAYS_GAME": {
+      "from": ["Gamer"],
+      "to": ["TransformedGame"],
+      "open_properties": false,
+      "mandatory_properties": {},
+      "optional_properties": {}
+    }
+  }
+}
