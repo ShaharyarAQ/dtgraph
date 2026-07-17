@@ -34,9 +34,9 @@
       }
     ],
 
-    "TransformedTeam": [
+    "TeamSummary": [
       {
-        "labels": ["TransformedTeam"],
+        "labels": ["TeamSummary"],
         "optional_labels": [],
         "open_labels": false,
         "mandatory_properties": {
@@ -51,9 +51,9 @@
       }
     ],
 
-    "TransformedGame": [
+    "GameSummary": [
       {
-        "labels": ["TransformedGame"],
+        "labels": ["GameSummary"],
         "optional_labels": [],
         "open_labels": false,
         "mandatory_properties": {
@@ -70,7 +70,7 @@
   "edges": {
     "MEMBER_OF": {
       "from": ["Gamer"],
-      "to": ["TransformedTeam"],
+      "to": ["TeamSummary"],
       "open_properties": false,
       "mandatory_properties": {},
       "optional_properties": {}
@@ -78,7 +78,7 @@
 
     "PLAYS_GAME": {
       "from": ["Gamer"],
-      "to": ["TransformedGame"],
+      "to": ["GameSummary"],
       "open_properties": false,
       "mandatory_properties": {},
       "optional_properties": {}
